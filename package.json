@@ -1,0 +1,32 @@
+{
+  "name": "kindee-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vue-tsc --noEmit && vite build",
+    "test": "tsx --test tests/*.test.ts",
+    "build:android": "bash build-android.sh",
+    "build:apple": "bash ios/build-apple.sh"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/ios": "^7.4.3",
+    "pinia": "^2.3.0",
+    "vite-plugin-pwa": "^1.3.0",
+    "vue": "^3.5.0",
+    "vue-i18n": "^11.4.18",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "@types/node": "^26.6.6",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "tsx": "^4.23.15",
+    "typescript": "~5.7.0",
+    "vite": "^6.0.0",
+    "vue-tsc": "^2.2.0"
+  }
+}

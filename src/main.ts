@@ -1,0 +1,11 @@
+import {createApp} from 'vue';
+import {createPinia} from 'pinia';
+import {createRouter,createWebHistory,createWebHashHistory} from 'vue-router';
+import App from './App.vue';
+import DashboardView from './views/DashboardView.vue';
+import RecipesView from './views/RecipesView.vue';
+import {i18n} from './i18n';
+import './style.css';
+const routes=['/','/meal-prep','/progress','/settings','/onboarding'].map((path,i)=>({path,name:['home','prep','progress','settings','onboarding'][i],component:DashboardView}));
+const router=createRouter({history:(import.meta.env.VITE_PUBLIC_DEMO==='true'||import.meta.env.VITE_NATIVE==='true')?createWebHashHistory(import.meta.env.BASE_URL):createWebHistory(import.meta.env.BASE_URL),routes:[...routes,{path:'/recipes',name:'recipes',component:RecipesView},{path:'/:pathMatch(.*)*',redirect:'/'}]});
+createApp(App).use(createPinia()).use(router).use(i18n).mount('#app');

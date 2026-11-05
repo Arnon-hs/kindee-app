@@ -1,0 +1,264 @@
+{
+  "source": "/api/v1/recipes?market=TH",
+  "generated_at": "2026-11-05T16:27:51.597Z",
+  "kind": "illustrative_seed_snapshot",
+  "recipes": [
+    {
+      "slug": "chicken-rice-bowl",
+      "title": "Chicken Rice Bowl",
+      "description": "High-protein bowl with vegetables",
+      "servings": 2,
+      "total_minutes": 30,
+      "cleanup_minutes": 5,
+      "nutrition": {
+        "servings": 2,
+        "total": {
+          "calories": 1109.4,
+          "protein_g": 99.6,
+          "fat_g": 21.2,
+          "carbs_g": 129.5,
+          "price_thb": 77.2
+        },
+        "per_serving": {
+          "calories": 554.7,
+          "protein_g": 49.8,
+          "fat_g": 10.6,
+          "carbs_g": 64.75,
+          "price_thb": 38.6
+        },
+        "is_price_estimate": true,
+        "price": {
+          "currency": "THB",
+          "status": "estimated",
+          "total": 77.2,
+          "per_serving": 38.6
+        }
+      },
+      "market": "TH",
+      "price_currency": "THB",
+      "provenance": "illustrative_seed_v0.1",
+      "allergen_status": "unknown",
+      "ingredients": [
+        {
+          "name": "Chicken breast raw",
+          "grams": 360,
+          "preparation_state": "raw",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        },
+        {
+          "name": "Jasmine rice dry",
+          "grams": 140,
+          "preparation_state": "raw",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        },
+        {
+          "name": "Broccoli raw",
+          "grams": 250,
+          "preparation_state": "raw",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        },
+        {
+          "name": "Olive oil",
+          "grams": 10,
+          "preparation_state": "unknown",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        }
+      ]
+    },
+    {
+      "slug": "garlic-shrimp-rice",
+      "title": "Garlic Shrimp Rice",
+      "description": "Fast shrimp with fragrant rice",
+      "servings": 2,
+      "total_minutes": 25,
+      "cleanup_minutes": 5,
+      "nutrition": {
+        "servings": 2,
+        "total": {
+          "calories": 895.55,
+          "protein_g": 86.86,
+          "fat_g": 11.82,
+          "carbs_g": 109.59,
+          "price_thb": 102.4
+        },
+        "per_serving": {
+          "calories": 447.78,
+          "protein_g": 43.43,
+          "fat_g": 5.91,
+          "carbs_g": 54.8,
+          "price_thb": 51.2
+        },
+        "is_price_estimate": true,
+        "price": {
+          "currency": "THB",
+          "status": "estimated",
+          "total": 102.4,
+          "per_serving": 51.2
+        }
+      },
+      "market": "TH",
+      "price_currency": "THB",
+      "provenance": "illustrative_seed_v0.1",
+      "allergen_status": "unknown",
+      "ingredients": [
+        {
+          "name": "Shrimp raw",
+          "grams": 320,
+          "preparation_state": "raw",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        },
+        {
+          "name": "Jasmine rice dry",
+          "grams": 130,
+          "preparation_state": "raw",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        },
+        {
+          "name": "Garlic raw",
+          "grams": 15,
+          "preparation_state": "raw",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        },
+        {
+          "name": "Olive oil",
+          "grams": 10,
+          "preparation_state": "unknown",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        }
+      ]
+    },
+    {
+      "slug": "tofu-spinach-bowl",
+      "title": "Tofu Spinach Bowl",
+      "description": "Budget-friendly tofu and greens",
+      "servings": 2,
+      "total_minutes": 20,
+      "cleanup_minutes": 4,
+      "nutrition": {
+        "servings": 2,
+        "total": {
+          "calories": 905.9,
+          "protein_g": 58.25,
+          "fat_g": 31.6,
+          "carbs_g": 97,
+          "price_thb": 61.5
+        },
+        "per_serving": {
+          "calories": 452.95,
+          "protein_g": 29.13,
+          "fat_g": 15.8,
+          "carbs_g": 48.5,
+          "price_thb": 30.75
+        },
+        "is_price_estimate": true,
+        "price": {
+          "currency": "THB",
+          "status": "estimated",
+          "total": 61.5,
+          "per_serving": 30.75
+        }
+      },
+      "market": "TH",
+      "price_currency": "THB",
+      "provenance": "illustrative_seed_v0.1",
+      "allergen_status": "unknown",
+      "ingredients": [
+        {
+          "name": "Firm tofu",
+          "grams": 400,
+          "preparation_state": "unknown",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        },
+        {
+          "name": "Spinach raw",
+          "grams": 250,
+          "preparation_state": "raw",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        },
+        {
+          "name": "Jasmine rice dry",
+          "grams": 100,
+          "preparation_state": "raw",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        },
+        {
+          "name": "Olive oil",
+          "grams": 10,
+          "preparation_state": "unknown",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        }
+      ]
+    },
+    {
+      "slug": "tomato-eggs",
+      "title": "Tomato Eggs",
+      "description": "Simple one-pan eggs in tomato sauce",
+      "servings": 1,
+      "total_minutes": 17,
+      "cleanup_minutes": 4,
+      "nutrition": {
+        "servings": 1,
+        "total": {
+          "calories": 318,
+          "protein_g": 22.41,
+          "fat_g": 20.7,
+          "carbs_g": 10.87,
+          "price_thb": 28.45
+        },
+        "per_serving": {
+          "calories": 318,
+          "protein_g": 22.41,
+          "fat_g": 20.7,
+          "carbs_g": 10.87,
+          "price_thb": 28.45
+        },
+        "is_price_estimate": true,
+        "price": {
+          "currency": "THB",
+          "status": "estimated",
+          "total": 28.45,
+          "per_serving": 28.45
+        }
+      },
+      "market": "TH",
+      "price_currency": "THB",
+      "provenance": "illustrative_seed_v0.1",
+      "allergen_status": "unknown",
+      "ingredients": [
+        {
+          "name": "Egg whole raw",
+          "grams": 160,
+          "preparation_state": "raw",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        },
+        {
+          "name": "Tomato raw",
+          "grams": 250,
+          "preparation_state": "raw",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        },
+        {
+          "name": "Olive oil",
+          "grams": 5,
+          "preparation_state": "unknown",
+          "nutrition_source": "illustrative_seed_v0.1",
+          "allergens": null
+        }
+      ]
+    }
+  ]
+}

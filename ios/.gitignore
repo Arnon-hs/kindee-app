@@ -1,0 +1,8 @@
+App/Pods/
+App/build/
+App/build-watch/
+App/App/public/
+App/App/capacitor.config.json
+App/App/config.xml
+App/App.xcworkspace/xcuserdata/
+**/xcuserdata/

@@ -1,0 +1,250 @@
+{
+  "version": 1,
+  "photos": [
+    {
+      "id": "chicken-rice",
+      "title": "File:Lemongrass chicken rice bowl with kimchi.jpg",
+      "full": "chicken-rice-960.webp",
+      "thumbnail": "chicken-rice-360.webp",
+      "variants": [
+        {
+          "filename": "chicken-rice-960.webp",
+          "width": 960,
+          "height": 720,
+          "bytes": 231050
+        },
+        {
+          "filename": "chicken-rice-360.webp",
+          "width": 360,
+          "height": 270,
+          "bytes": 31440
+        }
+      ],
+      "source_page": "https://commons.wikimedia.org/wiki/File:Lemongrass_chicken_rice_bowl_with_kimchi.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/56/Lemongrass_chicken_rice_bowl_with_kimchi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "download_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/56/Lemongrass_chicken_rice_bowl_with_kimchi.jpg/1280px-Lemongrass_chicken_rice_bowl_with_kimchi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "author": "Gary Stevens",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0",
+      "description": "Lemongrass chicken rice bowl with kimchi. Illustrative serving; nutrition is calculated from the KinDee recipe ingredients, not inferred from the photo.",
+      "alt": "Lemongrass chicken rice bowl with kimchi.",
+      "original_width": 3648,
+      "original_height": 2736,
+      "download_width": 1280,
+      "download_height": 960,
+      "changes": "Proportional resize and WebP conversion. Original aspect ratio preserved in files; cards may crop the display using CSS object-fit.",
+      "attribution": "Lemongrass chicken rice bowl with kimchi.jpg — Gary Stevens, CC BY 2.0. Resized and converted to WebP.",
+      "illustrative": true
+    },
+    {
+      "id": "shrimp-rice",
+      "title": "File:Butter Garlic Shrimp (with rice), Haleiwa, Hawaii.jpg",
+      "full": "shrimp-rice-960.webp",
+      "thumbnail": "shrimp-rice-360.webp",
+      "variants": [
+        {
+          "filename": "shrimp-rice-960.webp",
+          "width": 960,
+          "height": 720,
+          "bytes": 162218
+        },
+        {
+          "filename": "shrimp-rice-360.webp",
+          "width": 360,
+          "height": 270,
+          "bytes": 29704
+        }
+      ],
+      "source_page": "https://commons.wikimedia.org/wiki/File:Butter_Garlic_Shrimp_(with_rice),_Haleiwa,_Hawaii.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/90/Butter_Garlic_Shrimp_%28with_rice%29%2C_Haleiwa%2C_Hawaii.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "download_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/90/Butter_Garlic_Shrimp_%28with_rice%29%2C_Haleiwa%2C_Hawaii.jpg/1280px-Butter_Garlic_Shrimp_%28with_rice%29%2C_Haleiwa%2C_Hawaii.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "author": "Zheng Zhou",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "description": "Butter garlic shrimp served with rice and salad in Haleiwa, Hawaii. Illustrative serving; actual KinDee recipe portions may differ.",
+      "alt": "Butter garlic shrimp served with rice and salad in Haleiwa, Hawaii.",
+      "original_width": 4032,
+      "original_height": 3024,
+      "download_width": 1280,
+      "download_height": 960,
+      "changes": "Proportional resize and WebP conversion. Original aspect ratio preserved in files; cards may crop the display using CSS object-fit.",
+      "attribution": "Butter Garlic Shrimp (with rice), Haleiwa, Hawaii.jpg — Zheng Zhou, CC BY-SA 4.0. Resized and converted to WebP.",
+      "illustrative": true
+    },
+    {
+      "id": "tomato-eggs",
+      "title": "File:番茄炒蛋2.PNG",
+      "full": "tomato-eggs-960.webp",
+      "thumbnail": "tomato-eggs-360.webp",
+      "variants": [
+        {
+          "filename": "tomato-eggs-960.webp",
+          "width": 960,
+          "height": 612,
+          "bytes": 63532
+        },
+        {
+          "filename": "tomato-eggs-360.webp",
+          "width": 360,
+          "height": 230,
+          "bytes": 13546
+        }
+      ],
+      "source_page": "https://commons.wikimedia.org/wiki/File:%E7%95%AA%E8%8C%84%E7%82%92%E8%9B%8B2.PNG",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/6/60/%E7%95%AA%E8%8C%84%E7%82%92%E8%9B%8B2.PNG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "download_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/%E7%95%AA%E8%8C%84%E7%82%92%E8%9B%8B2.PNG/1280px-%E7%95%AA%E8%8C%84%E7%82%92%E8%9B%8B2.PNG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "author": "三島堂",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "description": "Chinese tomato scrambled eggs on a plate. Illustrative serving; actual KinDee recipe portions may differ.",
+      "alt": "Chinese tomato scrambled eggs on a plate.",
+      "original_width": 1568,
+      "original_height": 1000,
+      "download_width": 1280,
+      "download_height": 816,
+      "changes": "Proportional resize and WebP conversion. Original aspect ratio preserved in files; cards may crop the display using CSS object-fit.",
+      "attribution": "番茄炒蛋2.PNG — 三島堂, CC BY-SA 4.0. Resized and converted to WebP.",
+      "illustrative": true
+    },
+    {
+      "id": "tofu-vegetables",
+      "title": "File:04 Tofu and vegetables - Congee Village House.jpg",
+      "full": "tofu-vegetables-960.webp",
+      "thumbnail": "tofu-vegetables-360.webp",
+      "variants": [
+        {
+          "filename": "tofu-vegetables-960.webp",
+          "width": 640,
+          "height": 480,
+          "bytes": 46608
+        },
+        {
+          "filename": "tofu-vegetables-360.webp",
+          "width": 360,
+          "height": 270,
+          "bytes": 21126
+        }
+      ],
+      "source_page": "https://commons.wikimedia.org/wiki/File:04_Tofu_and_vegetables_-_Congee_Village_House.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/8a/04_Tofu_and_vegetables_-_Congee_Village_House.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/8/8a/04_Tofu_and_vegetables_-_Congee_Village_House.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "author": "jasonlam",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "description": "Tofu with mixed vegetables at Congee Village House. Illustrative serving; actual KinDee recipe ingredients and portions may differ.",
+      "alt": "Tofu with mixed vegetables at Congee Village House.",
+      "original_width": 640,
+      "original_height": 480,
+      "download_width": 640,
+      "download_height": 480,
+      "changes": "Proportional resize and WebP conversion. Original aspect ratio preserved in files; cards may crop the display using CSS object-fit.",
+      "attribution": "04 Tofu and vegetables - Congee Village House.jpg — jasonlam, CC BY-SA 2.0. Resized and converted to WebP.",
+      "illustrative": true
+    },
+    {
+      "id": "basil-chicken",
+      "title": "File:Gai Pad Grapow with rice - Ghin Khao AUD10.90 (3973729228).jpg",
+      "full": "basil-chicken-960.webp",
+      "thumbnail": "basil-chicken-360.webp",
+      "variants": [
+        {
+          "filename": "basil-chicken-960.webp",
+          "width": 960,
+          "height": 642,
+          "bytes": 65982
+        },
+        {
+          "filename": "basil-chicken-360.webp",
+          "width": 360,
+          "height": 241,
+          "bytes": 16406
+        }
+      ],
+      "source_page": "https://commons.wikimedia.org/wiki/File:Gai_Pad_Grapow_with_rice_-_Ghin_Khao_AUD10.90_(3973729228).jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/35/Gai_Pad_Grapow_with_rice_-_Ghin_Khao_AUD10.90_%283973729228%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "download_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Gai_Pad_Grapow_with_rice_-_Ghin_Khao_AUD10.90_%283973729228%29.jpg/1280px-Gai_Pad_Grapow_with_rice_-_Ghin_Khao_AUD10.90_%283973729228%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "author": "Alpha from Melbourne, Australia",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+      "description": "Thai basil chicken with rice, vegetables and fried egg. Illustrative serving photographed at Ghin Khao; this does not represent a live restaurant integration.",
+      "alt": "Thai basil chicken with rice, vegetables and fried egg.",
+      "original_width": 2048,
+      "original_height": 1370,
+      "download_width": 1280,
+      "download_height": 856,
+      "changes": "Proportional resize and WebP conversion. Original aspect ratio preserved in files; cards may crop the display using CSS object-fit.",
+      "attribution": "Gai Pad Grapow with rice - Ghin Khao AUD10.90 (3973729228).jpg — Alpha from Melbourne, Australia, CC BY-SA 2.0. Resized and converted to WebP.",
+      "illustrative": true
+    },
+    {
+      "id": "green-curry",
+      "title": "File:Thai green chicken curry and roti.jpg",
+      "full": "green-curry-960.webp",
+      "thumbnail": "green-curry-360.webp",
+      "variants": [
+        {
+          "filename": "green-curry-960.webp",
+          "width": 960,
+          "height": 643,
+          "bytes": 116326
+        },
+        {
+          "filename": "green-curry-360.webp",
+          "width": 360,
+          "height": 241,
+          "bytes": 19646
+        }
+      ],
+      "source_page": "https://commons.wikimedia.org/wiki/File:Thai_green_chicken_curry_and_roti.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Thai_green_chicken_curry_and_roti.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "download_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Thai_green_chicken_curry_and_roti.jpg/1280px-Thai_green_chicken_curry_and_roti.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "author": "Takeaway",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "description": "Thai green chicken curry served with roti. Illustrative serving; recipe portions and accompaniment may differ.",
+      "alt": "Thai green chicken curry served with roti.",
+      "original_width": 1920,
+      "original_height": 1285,
+      "download_width": 1280,
+      "download_height": 857,
+      "changes": "Proportional resize and WebP conversion. Original aspect ratio preserved in files; cards may crop the display using CSS object-fit.",
+      "attribution": "Thai green chicken curry and roti.jpg — Takeaway, CC BY-SA 3.0. Resized and converted to WebP.",
+      "illustrative": true
+    },
+    {
+      "id": "omelette",
+      "title": "File:Khao khaichiao (omelette with rice), Bangkok, 2018-05-15.jpg",
+      "full": "omelette-960.webp",
+      "thumbnail": "omelette-360.webp",
+      "variants": [
+        {
+          "filename": "omelette-960.webp",
+          "width": 960,
+          "height": 720,
+          "bytes": 96466
+        },
+        {
+          "filename": "omelette-360.webp",
+          "width": 360,
+          "height": 270,
+          "bytes": 17158
+        }
+      ],
+      "source_page": "https://commons.wikimedia.org/wiki/File:Khao_khaichiao_(omelette_with_rice),_Bangkok,_2018-05-15.jpg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Khao_khaichiao_%28omelette_with_rice%29%2C_Bangkok%2C_2018-05-15.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "download_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b3/Khao_khaichiao_%28omelette_with_rice%29%2C_Bangkok%2C_2018-05-15.jpg/1280px-Khao_khaichiao_%28omelette_with_rice%29%2C_Bangkok%2C_2018-05-15.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "author": "Bitterschoko",
+      "license": "CC0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "description": "Thai omelette over rice, photographed in Bangkok. Illustrative serving; actual KinDee recipe portions may differ.",
+      "alt": "Thai omelette over rice, photographed in Bangkok.",
+      "original_width": 4032,
+      "original_height": 3024,
+      "download_width": 1280,
+      "download_height": 960,
+      "changes": "Proportional resize and WebP conversion. Original aspect ratio preserved in files; cards may crop the display using CSS object-fit.",
+      "attribution": "Khao khaichiao (omelette with rice), Bangkok, 2018-05-15.jpg — Bitterschoko, CC0. Resized and converted to WebP.",
+      "illustrative": true
+    }
+  ]
+}

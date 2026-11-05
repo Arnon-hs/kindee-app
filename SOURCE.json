@@ -1,0 +1,6 @@
+{
+  "source_repository": "private KinDee platform checkout",
+  "source_commit": "28ee1afe615950fd47f6bbad256c58ca1654d207",
+  "client_path": "apps/web",
+  "native_build_source_commit": "e185dc3bc196a3b14da851af6018f4a79417d155"
+}

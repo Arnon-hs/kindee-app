@@ -1,0 +1,84 @@
+name: Client checks and preview release
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    env:
+      KINDEE_PUBLIC_DEMO: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pwa-demo
+          path: dist
+          if-no-files-found: error
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0' 'build-tools;36.0.0'
+      - run: npm ci
+      - run: npm run build:android
+      - name: Prepare named debug APKs
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/KinDee-android-debug.apk
+          cp android/wear/build/outputs/apk/debug/wear-debug.apk release/KinDee-wearos-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-debug
+          path: release/*.apk
+          if-no-files-found: error
+  release:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.event.head_commit.message, 'release:'))
+    needs: [web, android]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-debug
+          path: release
+      - uses: actions/download-artifact@v4
+        with:
+          name: pwa-demo
+          path: pwa-demo
+      - name: Package and publish the verified preview build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TARGET: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          zip -rq release/KinDee-pwa-demo.zip pwa-demo
+          cd release
+          sha256sum *.apk *.zip > SHA256SUMS
+          cd ..
+          if gh release view v0.2.0-preview.1 >/dev/null 2>&1; then
+            echo 'Preview release already exists; leaving its assets unchanged.'
+            exit 0
+          fi
+          gh release create v0.2.0-preview.1 release/* --prerelease --target "$RELEASE_TARGET" --title 'KinDee 0.2.0 preview 1' --notes-file docs/RELEASE_0.2.0-preview.1.md

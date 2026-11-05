@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.jks
+*.keystore
+android/local.properties
+android/.gradle/
+**/build/
+ios/App/Pods/
+ios/App/build-watch/
+release/

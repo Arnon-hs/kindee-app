@@ -1,0 +1,60 @@
+name: App
+options:
+  bundleIdPrefix: com.kindee
+  deploymentTarget:
+    iOS: '15.0'
+    watchOS: '9.0'
+settings:
+  base:
+    SWIFT_VERSION: '5.0'
+    MARKETING_VERSION: '0.2.0'
+    CURRENT_PROJECT_VERSION: 2
+targets:
+  App:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+        excludes: [public, capacitor.config.json, config.xml, Info.plist, KinDee.entitlements]
+      - path: App/public
+        type: folder
+        buildPhase: resources
+      - path: App/capacitor.config.json
+        buildPhase: resources
+      - path: App/config.xml
+        buildPhase: resources
+    info:
+      path: App/Info.plist
+    entitlements:
+      path: App/KinDee.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kindee.app
+        PRODUCT_MODULE_NAME: App
+        TARGETED_DEVICE_FAMILY: '1,2'
+    dependencies:
+      - target: KinDeeWatch
+        embed: true
+  KinDeeWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: Watch/KinDeeWatch.swift
+    info:
+      path: Watch/Info.plist
+    entitlements:
+      path: App/KinDee.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kindee.app.watchkitapp
+        TARGETED_DEVICE_FAMILY: '4'
+        SKIP_INSTALL: YES
+schemes:
+  App:
+    build:
+      targets:
+        App: all
+  KinDeeWatch:
+    build:
+      targets:
+        KinDeeWatch: all
