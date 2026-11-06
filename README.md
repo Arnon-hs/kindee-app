@@ -1,4 +1,8 @@
-# KinDee Apps
+# KinDee Apps — MVP 0.3 preview
+
+New: self-service account registration/login against the local platform; independent device sessions; weekly saved meal plans and an ingredient shopping list. Plan snapshots never alter consumed calories automatically. The public Site remains an explicitly labelled memory-only demo; full accounts and persistent data need a running platform API.
+
+Clone the private platform as the sibling `../kindee-platform`, then run `python3 scripts/start-local.py` from that directory. Open http://localhost:8080 and register an account. Email verification/password reset and a public production API host are not included. [Current scope and checks](docs/MVP.md).
 
 Open client applications for KinDee: choose food around your goals, time and budget.
 

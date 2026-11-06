@@ -1,14 +1,15 @@
 {
   "name": "kindee-web",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.3.0-preview.1",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vue-tsc --noEmit && vite build",
     "test": "tsx --test tests/*.test.ts",
     "build:android": "bash build-android.sh",
-    "build:apple": "bash ios/build-apple.sh"
+    "build:apple": "bash ios/build-apple.sh",
+    "test:state": "node scripts/check-session-stores.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",

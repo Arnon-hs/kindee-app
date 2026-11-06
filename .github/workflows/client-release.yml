@@ -20,6 +20,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm test
+      - run: npm run test:state
       - uses: actions/upload-artifact@v4
         with:
           name: pwa-demo
@@ -79,8 +80,8 @@ jobs:
           cd release
           sha256sum *.apk *.zip > SHA256SUMS
           cd ..
-          if gh release view v0.2.0-preview.1 >/dev/null 2>&1; then
+          if gh release view v0.3.0-preview.1 >/dev/null 2>&1; then
             echo 'Preview release already exists; leaving its assets unchanged.'
             exit 0
           fi
-          gh release create v0.2.0-preview.1 release/* --prerelease --target "$RELEASE_TARGET" --title 'KinDee 0.2.0 preview 1' --notes-file docs/RELEASE_0.2.0-preview.1.md
+          gh release create v0.3.0-preview.1 release/* --prerelease --target "$RELEASE_TARGET" --title 'KinDee 0.3.0 MVP preview 1' --notes-file docs/RELEASE_0.3.0-preview.1.md
