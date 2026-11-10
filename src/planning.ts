@@ -1,7 +1,7 @@
 import catalog from './data/public-recipes.json';
 import type {Nutrition} from './api/recipes';
 export interface PlanInput {recipe_slug:string;servings:number;planned_for:string}
-export interface PlanIngredient {ingredient_id:string|number;name:string;preparation_state:string;grams:number;allergens:string[]|null}
+interface PlanIngredient {ingredient_id:string|number;name:string;preparation_state:string;grams:number;allergens:string[]|null}
 export interface PlanEntry extends PlanInput {id:number;title:string;market:string;nutrition:Nutrition;ingredients:PlanIngredient[];provenance:string}
 export interface ShoppingList {from:string;to:string;items:PlanIngredient[];source?:string}
 export function validDate(value:string):boolean{return /^\d{4}-\d{2}-\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;}
