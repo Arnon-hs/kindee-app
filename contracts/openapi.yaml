@@ -1,0 +1,2339 @@
+openapi: 3.1.0
+info:
+  title: KinDee Core API
+  version: 0.3.0
+  description: KinDee Core. Public recipes use illustrative THB seed data. Personal
+    dashboard is token protected. No live delivery adapters.
+servers:
+- url: https://kindee-api.158.69.190.195.sslip.io/api/v1
+  description: Dedicated OVH/Coolify test service
+- url: http://localhost:8080/api/v1
+paths:
+  /ai/status:
+    get:
+      operationId: nativeAiStatus
+      security:
+      - PersonalToken: []
+      summary: Account AI availability, model, remaining attempts and next daily reset
+      responses:
+        '200':
+          description: No-store status without any provider credential
+        '401':
+          description: Kindee session required
+  /ai/chat/completions:
+    post:
+      operationId: nativeFoodAi
+      security:
+      - PersonalToken: []
+      summary: Bounded OpenAI-compatible food estimation and Coach
+      description: Allowlisted Kindee accounts only. Up to 12 system/user/assistant messages, 24000 combined text bytes, and at most one attached JPEG up to 2 MB and 1600 pixels. Remote images and tools are not forwarded. Fixed gpt-5.4-mini model, 2048 output token cap, no automatic upstream retries. Durable database reservations enforce configured per-user daily, global daily and global monthly request limits, including failed attempts. Daily and monthly periods use UTC. Photos and messages are not persisted by this endpoint. Provider credentials stay in server environment settings.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messages]
+              properties:
+                messages:
+                  type: array
+                  minItems: 1
+                  maxItems: 12
+                  items:
+                    type: object
+                    required: [role, content]
+                    properties:
+                      role:
+                        type: string
+                        enum: [system, user, assistant]
+                      content:
+                        type: [string, array]
+                        minItems: 1
+                        maxItems: 2
+                        items:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              enum: [text, image_url]
+                            text:
+                              type: string
+                            image_url:
+                              type: object
+                              properties:
+                                url:
+                                  type: string
+      responses:
+        '200':
+          description: Chat completions choices containing a reviewable estimate
+        '401':
+          description: Kindee session required
+        '402':
+          description: Pilot unavailable, expired, exhausted or provider request failed; manual recovery
+        '413':
+          description: Request too large
+        '422':
+          description: Invalid food text or image
+  /food-entries/native:
+    post:
+      operationId: importReviewedNativeFood
+      security:
+      - PersonalToken: []
+      description: Explicit upload of reviewed native diary entries. UUIDs are scoped to the account and repeated uploads update the same snapshot. No images are accepted. This is not a bidirectional diary synchronization endpoint.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [consent, entries]
+              properties:
+                consent:
+                  type: boolean
+                  const: true
+                entries:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: object
+                    additionalProperties: false
+                    required: [client_entry_id, title, source, eaten_at, user_reviewed, calories, protein_g, fat_g, carbs_g]
+                    properties:
+                      client_entry_id: {type: string, format: uuid}
+                      title: {type: string, maxLength: 200}
+                      source: {type: string, enum: [ai_estimate, manual, barcode]}
+                      eaten_at: {type: string, format: date-time}
+                      user_reviewed: {type: boolean, const: true}
+                      calories: {type: number, minimum: 0, maximum: 20000}
+                      protein_g: {type: number, minimum: 0, maximum: 2000}
+                      fat_g: {type: number, minimum: 0, maximum: 2000}
+                      carbs_g: {type: number, minimum: 0, maximum: 3000}
+      responses:
+        '200': {description: Account-scoped entry identities and imported count}
+        '401': {description: Missing or expired personal session}
+        '422': {description: Invalid, unreviewed or unconsented entries}
+        '429': {description: Rate limited}
+  /recipes:
+    get:
+      operationId: listRecipes
+      responses:
+        '200':
+          description: Recipes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Recipe'
+        '429':
+          description: 60 requests per minute per caller/IP
+      parameters:
+      - name: market
+        in: query
+        schema:
+          type: string
+          default: TH
+        description: Configured market. Legacy recipe seed prices are THB; US currently
+          returns an empty list.
+  /recipes/{slug}:
+    get:
+      operationId: getRecipe
+      parameters:
+      - $ref: '#/components/parameters/Slug'
+      responses:
+        '200':
+          description: Recipe detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Recipe'
+        '404':
+          description: Not found
+        '429':
+          description: 60 requests per minute per caller/IP
+  /recipes/{slug}/calculate:
+    post:
+      operationId: calculateRecipe
+      parameters:
+      - $ref: '#/components/parameters/Slug'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - servings
+              properties:
+                servings:
+                  type: integer
+                  minimum: 1
+                  maximum: 30
+      responses:
+        '200':
+          description: Scaled nutrition
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Nutrition'
+        '422':
+          description: Validation error
+        '429':
+          description: 60 requests per minute per caller/IP
+  /recommendations:
+    get:
+      operationId: recommendRecipes
+      parameters:
+      - name: max_calories
+        in: query
+        schema:
+          type: number
+          minimum: 1
+      - name: min_protein_g
+        in: query
+        schema:
+          type: number
+          minimum: 0
+      - name: max_price_thb
+        in: query
+        schema:
+          type: number
+          minimum: 1
+      - name: max_total_minutes
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      - name: max_cleanup_minutes
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+      - name: market
+        in: query
+        schema:
+          type: string
+          default: TH
+        description: Configured market. Legacy recipe seed prices are THB; US currently
+          returns an empty list.
+      responses:
+        '200':
+          description: Filtered recipes, sorted by cleanup and time
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Recipe'
+                  meta:
+                    type: object
+                    properties:
+                      count:
+                        type: integer
+                      ranking:
+                        type: string
+        '429':
+          description: 60 requests per minute per caller/IP
+  /markets:
+    get:
+      operationId: listMarkets
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Market'
+        '429':
+          description: 60 requests per minute per caller/IP
+  /discovery/restaurants:
+    get:
+      operationId: discoverRestaurants
+      description: Fresh local directory rows only; maximum 50 by distance. Empty
+        until licensed or owner-authorized data is imported. Opening, menu and delivery
+        statuses remain unknown.
+      parameters:
+      - name: market
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 2
+          maxLength: 2
+      - name: lat
+        in: query
+        required: true
+        schema:
+          type: number
+          minimum: -90
+          maximum: 90
+      - name: lng
+        in: query
+        required: true
+        schema:
+          type: number
+          minimum: -180
+          maximum: 180
+      - name: radius_m
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50000
+          default: 5000
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Place'
+                  meta:
+                    type: object
+                    properties:
+                      source:
+                        type: string
+                      live_integrations:
+                        type: boolean
+                      limit:
+                        type: integer
+        '422':
+          description: Invalid area or market
+        '429':
+          description: 60 requests per minute per caller/IP
+  /discovery/restaurants/{place}/menu:
+    get:
+      operationId: getPlaceMenu
+      parameters:
+      - name: place
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    $ref: '#/components/schemas/ProviderStatus'
+        '404':
+          description: Unknown place
+        '429':
+          description: 60 requests per minute per caller/IP
+  /discovery/delivery/check:
+    post:
+      operationId: checkDelivery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                market:
+                  type: string
+                  minLength: 2
+                  maxLength: 2
+                lat:
+                  type: number
+                  minimum: -90
+                  maximum: 90
+                lng:
+                  type: number
+                  minimum: -180
+                  maximum: 180
+                place_id:
+                  type: integer
+                radius_m:
+                  type: integer
+                  minimum: 1
+                  maximum: 50000
+              required:
+              - market
+              - lat
+              - lng
+              - place_id
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProviderStatus'
+                required:
+                - data
+        '422':
+          description: Invalid destination or place outside market
+        '429':
+          description: 60 requests per minute per caller/IP
+  /dashboard:
+    get:
+      operationId: getDashboard
+      security:
+      - PersonalToken: []
+      description: User-local day aggregation of immutable diary snapshots, goals,
+        recipes and 30 latest weight logs. Cache-Control private,no-store.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Dashboard'
+                required:
+                - data
+        '401':
+          description: Missing, expired or invalid token
+        '429':
+          description: 60 requests per minute per caller/IP
+  /food-entries:
+    post:
+      operationId: createFoodEntry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recipe_slug:
+                  type: string
+                servings:
+                  type: integer
+                  minimum: 1
+                  maximum: 30
+              required:
+              - recipe_slug
+              - servings
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      snapshot:
+                        type: object
+                        properties:
+                          recipe_slug:
+                            type: string
+                          title:
+                            type: string
+                          source:
+                            type: string
+                          nutrition:
+                            $ref: '#/components/schemas/Nutrition'
+        '401':
+          description: Unauthorized
+        '422':
+          description: Invalid input
+        '429':
+          description: 60 requests per minute per caller/IP
+        '404':
+          description: Recipe outside user market
+      security:
+      - PersonalToken: []
+  /weight-logs:
+    post:
+      operationId: recordWeight
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                kg:
+                  type: number
+                  minimum: 20
+                  maximum: 400
+              required:
+              - kg
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+        '401':
+          description: Unauthorized
+        '422':
+          description: Invalid input
+        '429':
+          description: 60 requests per minute per caller/IP
+      security:
+      - PersonalToken: []
+  /dashboard/widgets/{widget}:
+    get:
+      operationId: getDashboardWidget
+      security:
+      - PersonalToken: []
+      parameters:
+      - name: widget
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - calories
+          - recommendations
+          - meal-prep
+          - weight
+      responses:
+        '200':
+          description: Authenticated dashboard projection, private no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      widget:
+                        type: string
+                      date:
+                        type: string
+                        format: date
+                      timezone:
+                        type: string
+                      value:
+                        oneOf:
+                        - type: object
+                        - type: array
+                          items:
+                            $ref: '#/components/schemas/DashboardMeal'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Unknown widget
+        '429':
+          description: Rate limit
+  /profile:
+    patch:
+      operationId: updateOwnProfile
+      security:
+      - PersonalToken: []
+      description: Updates only the authenticated profile, goals and selected market/timezone.
+        Does not convert prices or invent market coverage. Personal response is private,no-store.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - market
+              - timezone
+              - calories
+              - protein_g
+              - fat_g
+              - carbs_g
+              properties:
+                market:
+                  type: string
+                  examples:
+                  - TH
+                  - US
+                timezone:
+                  type: string
+                  examples:
+                  - Asia/Bangkok
+                  - America/Los_Angeles
+                calories:
+                  type: integer
+                  minimum: 1
+                  maximum: 10000
+                protein_g:
+                  type: integer
+                  minimum: 0
+                  maximum: 1000
+                fat_g:
+                  type: integer
+                  minimum: 0
+                  maximum: 1000
+                carbs_g:
+                  type: integer
+                  minimum: 0
+                  maximum: 1000
+      responses:
+        '200':
+          description: Updated dashboard
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Dashboard'
+        '401':
+          description: Missing/expired personal token
+        '422':
+          description: Invalid input; profile remains unchanged
+        '429':
+          description: Rate limit
+  /food-entries/{entry}:
+    delete:
+      operationId: deleteOwnFoodEntry
+      security:
+      - PersonalToken: []
+      description: Deletes only an entry owned by the authenticated user. Nonexistent
+        and foreign-owned IDs both return 404; all responses are private,no-store.
+      parameters:
+      - name: entry
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '204':
+          description: Deleted; no response body
+        '401':
+          description: Missing or expired token
+        '404':
+          description: Entry not found for this user
+        '429':
+          description: Rate limit
+  /weight-logs/{log}:
+    delete:
+      operationId: deleteOwnWeightLog
+      security:
+      - PersonalToken: []
+      description: Deletes only an entry owned by the authenticated user. Nonexistent
+        and foreign-owned IDs both return 404; all responses are private,no-store.
+      parameters:
+      - name: log
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '204':
+          description: Deleted; no response body
+        '401':
+          description: Missing or expired token
+        '404':
+          description: Entry not found for this user
+        '429':
+          description: Rate limit
+  /onboarding:
+    get:
+      operationId: getOnboarding
+      security:
+      - PersonalToken: []
+      responses:
+        '200':
+          description: Private response; Cache-Control private, no-store; Vary Authorization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/OnboardingState'
+        '401':
+          description: Missing/expired account token; no-store
+        '422':
+          description: Invalid input or no readings; no-store
+        '429':
+          description: Rate limit; no-store
+    put:
+      operationId: completeOnboarding
+      security:
+      - PersonalToken: []
+      responses:
+        '200':
+          description: Persist goal and initial measurements on this account; record
+            weight only if baseline changes. Returns data.onboarding_completed=true.
+            Does not calculate medical targets or automatically change calorie goal.
+        '401':
+          description: Missing/expired account token; no-store
+        '422':
+          description: Invalid input or no readings; no-store
+        '429':
+          description: Rate limit; no-store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingInput'
+      description: Selecting health_connect, healthkit or wear_os requires current-day
+        readings for that provider in the profile timezone, collected within 2 hours.
+        Otherwise explicitly choose later or unsupported; selecting an app is not
+        a connection.
+  /health:
+    get:
+      operationId: getHealth
+      security:
+      - PersonalToken: []
+      responses:
+        '200':
+          description: Private response; Cache-Control private, no-store; Vary Authorization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/HealthSummary'
+        '401':
+          description: Missing/expired account token; no-store
+        '422':
+          description: Invalid input or no readings; no-store
+        '429':
+          description: Rate limit; no-store
+    delete:
+      operationId: deleteHealthImports
+      security:
+      - PersonalToken: []
+      responses:
+        '204':
+          description: Private response; Cache-Control private, no-store; Vary Authorization
+        '401':
+          description: Missing/expired account token; no-store
+        '422':
+          description: Invalid input or no readings; no-store
+        '429':
+          description: Rate limit; no-store
+      description: Delete all health imports for the authenticated account and clear
+        selected source. Does not delete food/weight history or revoke device permissions;
+        device settings control those.
+  /health/sync:
+    post:
+      operationId: syncHealth
+      security:
+      - PersonalToken: []
+      responses:
+        '200':
+          description: Private response; Cache-Control private, no-store; Vary Authorization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/HealthSummary'
+        '401':
+          description: Missing/expired account token; no-store
+        '422':
+          description: Invalid input or no readings; no-store
+        '429':
+          description: Rate limit; no-store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HealthSyncInput'
+  /auth/register:
+    post:
+      tags:
+      - Accounts
+      summary: Register with independent expiring device sessions
+      description: Eight attempts per minute per IP, separate from the general API
+        limiter. Email is not verified. Self-service password reset/email delivery
+        is not implemented.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountRegistration'
+      responses:
+        '201':
+          description: Authenticated session
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AccountSession'
+                required:
+                - data
+        '401':
+          description: Invalid credentials
+        '422':
+          description: Invalid input or existing email
+        '429':
+          description: Rate limited; private, no-store
+  /auth/login:
+    post:
+      tags:
+      - Accounts
+      summary: Login with independent expiring device sessions
+      description: Eight attempts per minute per IP, separate from the general API
+        limiter. Email is not verified. Self-service password reset/email delivery
+        is not implemented.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountCredentials'
+      responses:
+        '200':
+          description: Authenticated session
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AccountSession'
+                required:
+                - data
+        '401':
+          description: Invalid credentials
+        '422':
+          description: Invalid input or existing email
+        '429':
+          description: Rate limited; private, no-store
+  /auth/logout:
+    post:
+      tags:
+      - Accounts
+      summary: Revoke only the presented session or legacy CLI token
+      security: &id001
+      - PersonalToken: []
+      responses:
+        '204':
+          description: Session revoked; private, no-store
+        '401':
+          description: Expired or invalid token
+  /meal-plans:
+    get:
+      tags:
+      - Planning
+      security: *id001
+      summary: List own immutable recipe plans
+      parameters: &id002
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Local calendar day; default range today through six days later,
+          maximum 31 inclusive days.
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Local calendar day; default range today through six days later,
+          maximum 31 inclusive days.
+      responses:
+        '200':
+          description: Owned plans only
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/MealPlanList'
+                required:
+                - data
+        '422':
+          description: Invalid date range
+    post:
+      tags:
+      - Planning
+      security: *id001
+      summary: Save a market-matching recipe snapshot without modifying the food diary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MealPlanInput'
+      responses:
+        '201':
+          description: Plan saved
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/MealPlanEntry'
+                required:
+                - data
+        '422':
+          description: Invalid date, portions or recipe market
+  /meal-plans/{plan}:
+    delete:
+      tags:
+      - Planning
+      security: *id001
+      summary: Remove an owned plan entry
+      parameters:
+      - name: plan
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Plan removed; private, no-store
+        '404':
+          description: Not found or belongs to another account
+  /shopping-list:
+    get:
+      tags:
+      - Planning
+      security: *id001
+      summary: Aggregate owned ingredient snapshots by ingredient and preparation
+        state
+      description: Raw and cooked quantities remain separate. Changes to recipes do
+        not modify existing plan snapshots. No pantry/stock subtraction or allergen
+        safety claim.
+      parameters: *id002
+      responses:
+        '200':
+          description: Shopping ingredients; private, no-store
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ShoppingList'
+                required:
+                - data
+        '422':
+          description: Invalid date range
+  /meal-plans/personalized/preview:
+    post:
+      operationId: previewPersonalMealPlan
+      security:
+      - PersonalToken: []
+      summary: Preview a personal seven-day meal plan
+      description: Private/no-store. Requires saved food preferences. Empty eligible
+        catalogs return an empty proposal with no_matches.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - from
+              properties:
+                from:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Successful account-owned result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PersonalPlanPreview'
+        '401':
+          description: Authentication required
+        '422':
+          description: Invalid input or missing preferences
+  /meal-plans/personalized:
+    post:
+      operationId: savePersonalMealPlan
+      security:
+      - PersonalToken: []
+      summary: Save an explicitly reviewed proposal idempotently
+      description: Private/no-store. A changed preview or conflicting request ID returns
+        409. Identical intact weeks are reused even across request IDs. replace_generated must be true to replace overlapping generated meals. Manual meals and the food diary are preserved. Shopping only includes cooking rows.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - from
+              - request_id
+              - preview_hash
+              properties:
+                from:
+                  type: string
+                  format: date
+                request_id:
+                  type: string
+                  format: uuid
+                replace_generated:
+                  type: boolean
+                  default: false
+                  description: Explicit consent to replace only tracked generated meals in these seven days.
+                preview_hash:
+                  type: string
+                  minLength: 64
+                  maxLength: 64
+      responses:
+        '200':
+          description: Successful account-owned result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      from:
+                        type: string
+                        format: date
+                      entries_saved:
+                        type: integer
+                      ids:
+                        type: array
+                        items:
+                          type: integer
+        '401':
+          description: Authentication required
+        '422':
+          description: Invalid input, missing preferences, or no matches
+        '409':
+          description: Review changed or request ID conflicts
+  /meal-plans/menu-nutrition:
+    post:
+      security:
+      - PersonalToken: []
+      summary: Estimate up to twelve current nearby menu portions using Kindee AI
+      description: Explicit consent sends menu names, descriptions and selected options to OpenAI, without profile data. Uses shared durable AI limits, validates approximate nutrition, and caches per account for seven days. Requires unrestricted diet and no ingredient exclusions. Never logs eaten food.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [consent]
+              properties:
+                consent:
+                  type: boolean
+                  enum: [true]
+      responses:
+        '200':
+          description: Counts of new and cached estimates; source is ai_menu_estimate, not verified nutrition
+        '401':
+          description: Authentication required
+        '402':
+          description: AI disabled, shared budget exhausted, or provider failure
+        '422':
+          description: Missing consent, dietary restrictions, missing location, or unusable estimates
+        '429':
+          description: Estimate already in progress or rate limited
+  /meal-plans/nearby-menu:
+    get:
+      security: &id003
+      - PersonalToken: []
+      summary: Find private nearby menus with LINE MAN and Homa cafe auto refresh
+      description: Enabled accounts refresh public LINE MAN menus at most hourly. Restaurant coordinates are verified; menu presence does not confirm delivery to the selected address. Failed refreshes never advance checked_at. Grab auto refresh is not connected.
+      parameters:
+      - name: lat
+        in: query
+        required: true
+        schema:
+          type: number
+          minimum: -90
+          maximum: 90
+      - name: lng
+        in: query
+        required: true
+        schema:
+          type: number
+          minimum: -180
+          maximum: 180
+      - name: radius_m
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 30000
+      - name: q
+        in: query
+        required: false
+        description: Optional place or address label for bounded public venue search
+        schema:
+          type: string
+          maxLength: 200
+      responses:
+        '200':
+          description: Private/no-store bounded observations, not a live provider
+            feed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    type: object
+                    description: Provider-specific refresh status, coverage and delivery verification scope
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MenuObservation'
+        '401':
+          description: Authentication required
+  /meal-plans/nearby-places:
+    get:
+      operationId: nearbyGooglePlacesCached
+      security:
+      - PersonalToken: []
+      summary: Read or poll cached nearby places without starting a paid run
+      parameters:
+      - {name: lat, in: query, required: true, schema: {type: number, minimum: -90, maximum: 90}}
+      - {name: lng, in: query, required: true, schema: {type: number, minimum: -180, maximum: 180}}
+      - {name: radius_m, in: query, schema: {type: integer, minimum: 100, maximum: 5000, default: 2000}}
+      responses: &placesResponses
+        '200':
+          description: Private no-store bounded Google Maps directory results via Apify; no menu, calories or verified dietary suitability
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    maxItems: 20
+                    items:
+                      type: object
+                      required: [id, name, kind, latitude, longitude, distance_m, menu, calories, dietary_safety]
+                      properties:
+                        id: {type: string}
+                        name: {type: string}
+                        kind: {type: string, enum: [restaurant, store]}
+                        latitude: {type: number}
+                        longitude: {type: number}
+                        distance_m: {type: integer}
+                        photo_url: {type: [string, 'null'], format: uri}
+                        maps_url: {type: [string, 'null'], format: uri}
+                        menu: {type: 'null'}
+                        calories: {type: 'null'}
+                        dietary_safety: {type: string, const: unknown}
+                  meta:
+                    type: object
+                    required: [provider, status, cache_hours]
+                    properties:
+                      provider: {type: string, const: Google Maps via Apify}
+                      status: {type: string, enum: [ready, refreshing, unavailable, not_enabled, not_cached, daily_limit, monthly_limit]}
+                      cache_hours: {type: integer, const: 24}
+        '401': {description: Session required}
+        '422': {description: Invalid coordinates or radius}
+    post:
+      operationId: startNearbyGooglePlaces
+      security:
+      - PersonalToken: []
+      summary: Explicitly request a bounded directory refresh when its 24-hour cache is absent
+      description: Pilot allowlist only. Three starts per UTC day and eight per UTC month shared by the service. Reserve before POST; uncertain starts are not retried. Fixed actor, 20 places maximum and USD 0.50 run cap. No reviews, contact enrichment or extra photos. Availability, delivery and dietary safety are not verified.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lat, lng]
+              properties:
+                lat: {type: number, minimum: -90, maximum: 90}
+                lng: {type: number, minimum: -180, maximum: 180}
+                radius_m: {type: integer, minimum: 100, maximum: 5000, default: 2000}
+      responses: *placesResponses
+  /meal-plans/location/search:
+    post:
+      security: *id003
+      summary: Explicit address search through a switchable geocoder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - query
+              properties:
+                query:
+                  type: string
+                  minLength: 3
+                  maxLength: 200
+      responses:
+        '200':
+          description: Private/no-store address candidates with attribution
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        label:
+                          type: string
+                        latitude:
+                          type: number
+                        longitude:
+                          type: number
+        '429':
+          description: Shared geocoder quota; retry later
+        '503':
+          description: Geocoder unavailable
+components:
+  parameters:
+    Slug:
+      name: slug
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    Nutrients:
+      type: object
+      required:
+      - calories
+      - protein_g
+      - fat_g
+      - carbs_g
+      - price_thb
+      properties:
+        calories:
+          type: number
+        protein_g:
+          type: number
+        fat_g:
+          type: number
+        carbs_g:
+          type: number
+        price_thb:
+          type:
+          - number
+          - 'null'
+    Nutrition:
+      type: object
+      properties:
+        servings:
+          type: integer
+        total:
+          $ref: '#/components/schemas/Nutrients'
+        per_serving:
+          $ref: '#/components/schemas/Nutrients'
+        is_price_estimate:
+          type: boolean
+        price:
+          type: object
+          properties:
+            currency:
+              type:
+              - string
+              - 'null'
+            status:
+              type: string
+              enum:
+              - estimated
+              - unknown
+            total:
+              type:
+              - number
+              - 'null'
+            per_serving:
+              type:
+              - number
+              - 'null'
+    Recipe:
+      type: object
+      properties:
+        slug:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        servings:
+          type: integer
+        total_minutes:
+          type: integer
+        cleanup_minutes:
+          type: integer
+        nutrition:
+          $ref: '#/components/schemas/Nutrition'
+        ingredients:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              grams:
+                type: number
+              preparation_state:
+                type: string
+                enum:
+                - raw
+                - cooked
+                - unknown
+              nutrition_source:
+                type: string
+              allergens:
+                type:
+                - array
+                - 'null'
+                items:
+                  type: string
+        market:
+          type:
+          - string
+          - 'null'
+          description: Configured ISO market, not inferred from recipe title.
+        price_currency:
+          type:
+          - string
+          - 'null'
+        provenance:
+          type: string
+        allergen_status:
+          type: string
+          const: unknown
+    Market:
+      type: object
+      properties:
+        id:
+          type: integer
+        country_code:
+          type: string
+          examples:
+          - TH
+          - US
+        currency:
+          type: string
+          examples:
+          - THB
+          - USD
+        timezone:
+          type: string
+        languages:
+          type: array
+          items:
+            type: string
+    ProviderStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - available
+          - unavailable
+          - unknown
+        provider:
+          type: string
+        capability:
+          type: string
+          enum:
+          - supported
+          - unsupported
+        checked_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        confidence:
+          type:
+          - number
+          - 'null'
+        coverage:
+          type:
+          - string
+          - 'null'
+      required:
+      - status
+      - provider
+      - capability
+    Place:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        location:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+        distance_m:
+          type: number
+        provenance:
+          type: object
+          properties:
+            provider:
+              type: string
+            external_id:
+              type: string
+            checked_at:
+              type: string
+            expires_at:
+              type: string
+        restaurant_status:
+          type: string
+          enum:
+          - open
+          - closed
+          - unknown
+        delivery:
+          $ref: '#/components/schemas/ProviderStatus'
+        menu:
+          $ref: '#/components/schemas/ProviderStatus'
+    DailyNutrients:
+      type: object
+      properties:
+        calories:
+          type: number
+        protein_g:
+          type: number
+        fat_g:
+          type: number
+        carbs_g:
+          type: number
+    DashboardMeal:
+      type: object
+      properties:
+        slug:
+          type: string
+        title:
+          type: string
+        minutes:
+          type: integer
+        cleanup_minutes:
+          type: integer
+        nutrition:
+          $ref: '#/components/schemas/Nutrients'
+    Dashboard:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        timezone:
+          type: string
+        market:
+          $ref: '#/components/schemas/Market'
+        nutrition:
+          type: object
+          properties:
+            consumed:
+              $ref: '#/components/schemas/DailyNutrients'
+            goals:
+              $ref: '#/components/schemas/DailyNutrients'
+        recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/DashboardMeal'
+        meal_prep:
+          type: object
+          properties:
+            status:
+              type: string
+              enum:
+              - suggestion
+            recipe:
+              anyOf:
+              - $ref: '#/components/schemas/DashboardMeal'
+              - type: 'null'
+            portions:
+              type: integer
+            saved_plan:
+              type: boolean
+        weight:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - kg
+            logs:
+              type: array
+              items:
+                type: object
+                properties:
+                  kg:
+                    type: string
+                  recorded_at:
+                    type: string
+                    format: date-time
+                  id:
+                    type: integer
+        entry_count:
+          type: integer
+        provenance:
+          type: string
+        ranking_version:
+          type: string
+        food_entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/FoodEntry'
+          description: Entries for the profile-local day, latest first; nutrition
+            is the immutable saved snapshot.
+        onboarding_completed:
+          type: boolean
+        health:
+          $ref: '#/components/schemas/HealthSummary'
+    FoodEntry:
+      type: object
+      required:
+      - id
+      - title
+      - recipe_slug
+      - nutrition
+      - eaten_at
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        recipe_slug:
+          type: string
+        servings:
+          type:
+          - integer
+          - 'null'
+        nutrition:
+          $ref: '#/components/schemas/Nutrients'
+        eaten_at:
+          type: string
+          format: date-time
+    OnboardingInput:
+      type: object
+      required:
+      - goal_kind
+      - activity_level
+      - health_preference
+      - consent
+      properties:
+        goal_kind:
+          type: string
+          enum:
+          - track
+          - maintain
+          - lose
+          - gain
+        height_cm:
+          type:
+          - number
+          - 'null'
+          minimum: 100
+          maximum: 250
+        baseline_kg:
+          type:
+          - number
+          - 'null'
+          minimum: 20
+          maximum: 400
+        target_kg:
+          type:
+          - number
+          - 'null'
+          minimum: 20
+          maximum: 400
+        activity_level:
+          type: string
+          enum:
+          - low
+          - moderate
+          - high
+        health_preference:
+          type: string
+          enum:
+          - health_connect
+          - healthkit
+          - wear_os
+          - unsupported
+          - later
+        consent:
+          type: boolean
+          const: true
+        food_preferences:
+          $ref: '#/components/schemas/FoodPreferences'
+    OnboardingState:
+      type: object
+      properties:
+        goal_kind:
+          type:
+          - string
+          - 'null'
+        height_cm:
+          type:
+          - string
+          - 'null'
+        baseline_kg:
+          type:
+          - string
+          - 'null'
+        target_kg:
+          type:
+          - string
+          - 'null'
+        activity_level:
+          type:
+          - string
+          - 'null'
+        health_preference:
+          type:
+          - string
+          - 'null'
+        onboarding_completed_at:
+          type:
+          - string
+          - 'null'
+        food_preferences:
+          oneOf:
+          - $ref: '#/components/schemas/FoodPreferences'
+          - type: 'null'
+      description: Decimal measurements are returned as strings. Null means setup
+        incomplete.
+    HealthDaily:
+      type: object
+      required:
+      - provider
+      - origin
+      - active_calories_kcal
+      - total_energy_kcal
+      - steps
+      - collected_at
+      properties:
+        provider:
+          type: string
+          enum:
+          - health_connect
+          - healthkit
+          - wear_os
+        origin:
+          type: string
+          maxLength: 160
+          pattern: ^[a-zA-Z0-9._:-]+$
+        active_calories_kcal:
+          type:
+          - number
+          - 'null'
+          minimum: 0
+          maximum: 20000
+        total_energy_kcal:
+          type:
+          - number
+          - 'null'
+          minimum: 0
+          maximum: 30000
+        steps:
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+          maximum: 200000
+        collected_at:
+          type: string
+          format: date-time
+      description: Client-reported daily cumulative values from one selected source.
+        Null is unknown, not zero. Wear OS CALORIES_DAILY includes BMR and must only
+        populate total_energy_kcal; active energy must be null. No automatic food-goal
+        increase or kg conversion.
+    HealthSyncInput:
+      allOf:
+      - $ref: '#/components/schemas/HealthDaily'
+      - type: object
+        required:
+        - date
+        - timezone
+        - consent
+        - select_source
+        properties:
+          date:
+            type: string
+            format: date
+            description: Profile-local day between today minus 90 days and today.
+          timezone:
+            type: string
+            description: Must equal current profile timezone.
+          consent:
+            type: boolean
+            const: true
+          select_source:
+            type: boolean
+      description: Upsert by account/provider/origin/date/timezone. Older collected_at
+        cannot overwrite a newer reading. No values -> 422. collected_at must be within
+        past 91 days and no more than 5 minutes in future. Client provenance is not
+        hardware attestation.
+    HealthSummary:
+      type: object
+      required:
+      - date
+      - timezone
+      - sources
+      - status
+      - daily
+      - provenance
+      - activity_goal_adjustment_kcal
+      properties:
+        date:
+          type: string
+          format: date
+        timezone:
+          type: string
+        sources:
+          type: array
+          items:
+            type: object
+            properties:
+              provider:
+                type: string
+              origin:
+                type: string
+              last_date:
+                type: string
+                format: date
+              selected:
+                type: boolean
+        status:
+          type: string
+          enum:
+          - available
+          - stale
+          - no_data
+        daily:
+          oneOf:
+          - $ref: '#/components/schemas/HealthDaily'
+          - type: 'null'
+        provenance:
+          type: string
+          const: client_reported
+        activity_goal_adjustment_kcal:
+          type: integer
+          const: 0
+      description: Only the selected source on the profile-local current day is displayed.
+        Sync older than 2 hours is stale. Never sum sources. HealthKit read authorization
+        is opaque; no data is not a successful connection.
+    AccountCredentials:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          maxLength: 128
+      required:
+      - email
+      - password
+    AccountRegistration:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 12
+          description: Maximum 72 UTF-8 bytes; confirmation must match.
+        password_confirmation:
+          type: string
+          format: password
+        market:
+          type: string
+          enum:
+          - TH
+          - US
+      required:
+      - name
+      - email
+      - password
+      - password_confirmation
+      - market
+    AccountSession:
+      type: object
+      properties:
+        token:
+          type: string
+          pattern: ^[a-f0-9]{64}$
+          description: Shown once. Keep in process memory; never store in shared Service
+            Worker caches.
+        expires_at:
+          type: string
+          format: date-time
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            email_verified:
+              const: false
+          required:
+          - id
+          - name
+          - email_verified
+      required:
+      - token
+      - expires_at
+      - user
+    MealPlanInput:
+      type: object
+      properties:
+        recipe_slug:
+          type: string
+        servings:
+          type: integer
+          minimum: 1
+          maximum: 20
+        planned_for:
+          type: string
+          format: date
+          description: Local calendar day, 2000-01-01 through 2099-12-31.
+      required:
+      - recipe_slug
+      - servings
+      - planned_for
+    PlanIngredient:
+      type: object
+      properties:
+        ingredient_id:
+          type: integer
+        name:
+          type: string
+        preparation_state:
+          type: string
+        grams:
+          type: number
+          minimum: 0
+        allergens:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: Null means unknown, not allergen-free.
+      required:
+      - ingredient_id
+      - name
+      - preparation_state
+      - grams
+      - allergens
+    MealPlanEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        recipe_slug:
+          type: string
+        title:
+          type: string
+        market:
+          type: string
+        servings:
+          type: integer
+        planned_for:
+          type: string
+          format: date
+        nutrition:
+          oneOf:
+          - $ref: '#/components/schemas/Nutrition'
+          - type: 'null'
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanIngredient'
+        provenance:
+          type: string
+        meal_slot:
+          type: string
+          enum:
+          - breakfast
+          - lunch
+          - snack
+          - dinner
+        fulfillment:
+          type: string
+          enum:
+          - cook
+          - cafe
+          - delivery
+        offer_status:
+          type: string
+          enum:
+          - recipe
+          - search_needed
+          - observed_menu
+        menu_item:
+          $ref: '#/components/schemas/MenuObservation'
+      required:
+      - id
+      - recipe_slug
+      - title
+      - market
+      - servings
+      - planned_for
+      - nutrition
+      - ingredients
+      - provenance
+    MealPlanList:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/MealPlanEntry'
+      required:
+      - from
+      - to
+      - entries
+    ShoppingList:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanIngredient'
+        source:
+          type: string
+      required:
+      - from
+      - to
+      - items
+      - source
+    FoodPreferences:
+      type: object
+      additionalProperties: false
+      required:
+      - location
+      - diet
+      - likes
+      - excluded
+      - meals_per_day
+      - cooking_minutes
+      - budget_per_meal
+      - meal_mode
+      properties:
+        location:
+          type: object
+          additionalProperties: false
+          required:
+          - city
+          - radius_km
+          - source
+          properties:
+            city:
+              type: string
+              minLength: 1
+              maxLength: 200
+            latitude:
+              type:
+              - number
+              - 'null'
+              minimum: -90
+              maximum: 90
+            longitude:
+              type:
+              - number
+              - 'null'
+              minimum: -180
+              maximum: 180
+            radius_km:
+              type: integer
+              minimum: 1
+              maximum: 30
+            source:
+              type: string
+              enum:
+              - manual
+              - device
+              - address
+          description: Device source requires both coordinates. Manual city input
+            does not require location permission.
+        diet:
+          type: string
+          enum:
+          - any
+          - vegetarian
+          - vegan
+          - pescatarian
+        likes:
+          type: array
+          maxItems: 10
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+            - chicken
+            - shrimp
+            - egg
+            - tofu
+            - rice
+            - broccoli
+            - tomato
+            - spinach
+            - garlic
+            - olive
+        excluded:
+          type: array
+          maxItems: 10
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+            - chicken
+            - shrimp
+            - egg
+            - tofu
+            - rice
+            - broccoli
+            - tomato
+            - spinach
+            - garlic
+            - olive
+        meals_per_day:
+          type: integer
+          minimum: 2
+          maximum: 4
+        cooking_minutes:
+          type: integer
+          minimum: 10
+          maximum: 120
+        budget_per_meal:
+          type: number
+          minimum: 1
+          maximum: 2000
+          description: Home recipe estimate in the current market currency. External
+            meal prices remain unverified.
+        meal_mode:
+          type: string
+          enum:
+          - cook
+          - mixed
+          - delivery
+        daily_calories:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          maximum: 10000
+          description: Optional user-supplied goal, never calculated from body measurements.
+        allow_unverified_menu:
+          type: boolean
+          default: false
+          description: Explicitly include private menu observations requiring ingredient
+            review; nutrition may be unknown.
+      description: Private, account-owned answers. Likes and exclusions cannot overlap.
+        Location informs search links, not verified delivery eligibility.
+    PersonalPlanPreview:
+      type: object
+      required:
+      - from
+      - preview_hash
+      - entries
+      - days
+      - warnings
+      - candidate_count
+      properties:
+        from:
+          type: string
+          format: date
+        preview_hash:
+          type: string
+          minLength: 64
+          maxLength: 64
+        candidate_count:
+          type: integer
+          minimum: 0
+        entries:
+          type: array
+          items:
+            type: object
+            required:
+            - recipe_slug
+            - title
+            - planned_for
+            - meal_slot
+            - servings
+            - nutrition
+            - fulfillment
+            - offer_status
+            properties:
+              recipe_slug:
+                type: string
+              title:
+                type: string
+              planned_for:
+                type: string
+                format: date
+              meal_slot:
+                type: string
+                enum:
+                - breakfast
+                - lunch
+                - snack
+                - dinner
+              servings:
+                type: integer
+                minimum: 1
+                maximum: 3
+              nutrition:
+                oneOf:
+                - $ref: '#/components/schemas/Nutrition'
+                - type: 'null'
+              minutes:
+                type: integer
+              fulfillment:
+                type: string
+                enum:
+                - cook
+                - cafe
+                - delivery
+              offer_status:
+                type: string
+                enum:
+                - recipe
+                - search_needed
+                - observed_menu
+              recipe_revision:
+                type: string
+              menu_item:
+                $ref: '#/components/schemas/MenuObservation'
+        days:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              calories:
+                type:
+                - number
+                - 'null'
+                description: Null if any meal has unknown nutrition; never treats
+                  an unknown meal as zero.
+              estimated_cooking_cost:
+                type: number
+              external_meals:
+                type: integer
+              known_calories:
+                type: number
+              unknown_nutrition_meals:
+                type: integer
+        warnings:
+          type: array
+          items:
+            type: string
+        menu_candidate_count:
+          type: integer
+          minimum: 0
+      description: Seven-day proposal from the current market recipe catalog. Cafe/delivery
+        rows are dish references, not restaurant offers. Does not write plans or food
+        diary.
+    MenuObservation:
+      type: object
+      required:
+      - id
+      - title
+      - restaurant
+      - provider
+      - price
+      - source_url
+      - checked_at
+      - expires_at
+      - nutrition
+      - availability
+      properties:
+        id:
+          type: integer
+        source_id:
+          type: string
+        title:
+          type: string
+        restaurant:
+          type: string
+        fulfillment:
+          enum:
+          - cafe
+          - delivery
+        provider:
+          enum:
+          - merchant_site
+          - grab
+          - line_man
+        price:
+          type: object
+          properties:
+            amount_minor:
+              type: integer
+              minimum: 0
+            currency:
+              type: string
+        source_url:
+          type: string
+          format: uri
+        order_url:
+          type:
+          - string
+          - 'null'
+          format: uri
+        checked_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        distance_m:
+          type:
+          - integer
+          - 'null'
+        location_basis:
+          enum:
+          - restaurant
+          - delivery_destination
+        nutrition:
+          type: [object, 'null']
+          description: Validated account-private AI estimate for the selected options, otherwise null. Not measured or verified nutrition.
+          properties:
+            source:
+              const: ai_menu_estimate
+            verified:
+              const: false
+            total:
+              type: object
+            calorie_range:
+              type: object
+            portion_grams:
+              type: number
+            portion_description:
+              type: string
+            confidence:
+              enum: [low, medium]
+        image_url:
+          type: [string, 'null']
+          format: uri
+          description: Source dish photo; no fabricated substitute
+        selected_options:
+          type: array
+          items:
+            type: string
+        availability:
+          const: recheck_before_order
+        requires_ingredient_review:
+          const: true
+      description: Account-private bounded observation. No live quote or certified
+        dietary claim. Delivery distance is null when only the destination was checked.
+  securitySchemes:
+    PersonalToken:
+      type: http
+      scheme: bearer
+      description: 30-day bearer sessions from auth/register or auth/login. Only SHA-256
+        hashes are stored server-side. CLI-issued legacy tokens remain supported.
+        Logout revokes only the presented session.

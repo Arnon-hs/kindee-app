@@ -12,7 +12,8 @@
     "no-constant-condition": "warn"
   },
   // Scope is the maintained web client/config/scripts, not Swift/Kotlin or vendored JS.
-  "ignorePatterns": ["native/**", "android/**", "ios/**", "dist/**", "reports/**"],
+  // Generated contract output is checked by deterministic regeneration.
+  "ignorePatterns": ["native/**", "android/**", "ios/**", "dist/**", "reports/**", "src/api/generated/**"],
   // Step 2 adds native assertion/conditional warnings; old files remain report-only.
   // The broad probe's SonarJS formatting and inferred-boundary-type noise is not adopted.
   // SonarJS's template-only unused variables would be false positives in Vue; native

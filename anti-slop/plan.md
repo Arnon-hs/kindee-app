@@ -120,3 +120,11 @@ No hooks, branch protection, scheduled jobs, mutation package, React tool or cod
 
 
 2026-11-11, step 3b, chore/anti-slop-exact-optional: exactOptionalPropertyTypes enabled, 3 diagnostics -> 0. Absent HTTP bodies are omitted instead of explicitly undefined. Workbox 7.4.1 initialized arrow hooks are guarded and exposed by their original function references; constructors, quota registration, cache name, limits and route scope are unchanged. Actual callback identity/status-200/status-404/missing-cache controls passed. A temporary RequestInit body:undefined plant passed with the flag disabled and failed when enabled, then was removed. Vue typecheck, changed lint, web build, 29 tests and state checks passed. No dependency/native/workflow change. User explicitly authorized continuing the complete plan; later bounded steps will remain separate PRs.
+
+### 2026-11-11: step 4, API contract
+
+Backend source was recovered, reviewed and published by kindee-platform PRs #1-2. Its canonical schema is pinned by commit and SHA-256 in contracts/source.json. Hey API 0.99.0 and Zod 4.6.7 generate types/validators; existing Fetch/Capacitor transport is preserved. Account responses now validate at runtime. Other consumer migrations are deferred per feature, as the recipe requires.
+
+Source/output drift plants failed and were removed. Account malformed-payload tests and 48 old/new error outcomes passed, including a negative control. Build, 32 tests, session isolation and zero clones passed; lint 15 -> 11 warnings. Remaining warnings: planning.test.ts, HealthConnection.vue, stores/planning.ts, MealPlanner.vue non-null assertions and recipe-labels.ts nested ternary. CI source/regeneration plants and the final green run are recorded in this PR. Packaged MIT licenses checked; no dependency audit remediation claimed. Generated code excluded from detectors because the backend operation set exceeds current client usage, but it remains compiler checked.
+
+Real PR #6 plant: workflow run 42898028758 rejected the deliberately modified generated file at npm run api:check. The remaining old Android job was canceled to avoid wasting runner time. The plant was removed by regeneration in a new commit; no force push or history rewrite.

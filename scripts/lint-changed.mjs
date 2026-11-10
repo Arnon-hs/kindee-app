@@ -5,7 +5,7 @@ import {join} from 'node:path';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const oxlint = fileURLToPath(new URL('../node_modules/oxlint/bin/oxlint', import.meta.url));
-const rootConfigs = new Set(['vite.config.ts', 'capacitor.config.ts', 'knip.config.ts']);
+const rootConfigs = new Set(['vite.config.ts', 'capacitor.config.ts', 'knip.config.ts, openapi-ts.config.ts']);
 
 function git(args) {
   return execFileSync('git', args, {cwd: root, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024});

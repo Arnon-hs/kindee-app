@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/Arnon-hs/kindee-platform",
+  "commit": "5ed044952544f39407d68dd549913fff72187459",
+  "path": "apps/api/resources/openapi.yaml",
+  "sha256": "b0c16b9c8e9d427be2346412997be0a3d35e87a9eaf39591b105d49ad4b96639",
+  "published_url": "https://kindee-api.158.69.190.195.sslip.io/api/v1/openapi.yaml"
+}
