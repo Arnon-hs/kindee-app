@@ -87,7 +87,7 @@ jobs:
           if-no-files-found: error
   release:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.event.head_commit.message, 'release:'))
-    needs: [web, android]
+    needs: [quality, web, android]
     runs-on: ubuntu-latest
     permissions:
       contents: write
