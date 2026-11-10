@@ -22,6 +22,8 @@ export default {
     // Build output, installed dependencies and local detector reports are not source.
     '!dist/**', '!node_modules/**', '!reports/**',
   ],
+  // The API generator emits all backend operations, including ones this client does not use.
+  ignore: ['src/api/generated/**'],
   ignoreUnresolved: existsSync(generatedStateCheck)
     ? []
     : ['../node_modules/.cache/kindee-session-check/session-store-check.js'],
