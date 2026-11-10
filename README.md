@@ -1,44 +1,59 @@
-# KinDee Apps — MVP 0.3 preview
+# Kindee
 
-New: self-service account registration/login against the local platform; independent device sessions; weekly saved meal plans and an ingredient shopping list. Plan snapshots never alter consumed calories automatically. The public Site remains an explicitly labelled memory-only demo; full accounts and persistent data need a running platform API.
+Kindee helps you combine home cooking, nearby cafes and delivery in a meal plan, then record what you actually eat. Its native pilot connects real menu observations to a separate, reviewed AI calorie diary.
 
-Clone the private platform as the sibling `../kindee-platform`, then run `python3 scripts/start-local.py` from that directory. Open http://localhost:8080 and register an account. Email verification/password reset and a public production API host are not included. [Current scope and checks](docs/MVP.md).
+- **Android:** Kotlin/Compose pilot built and tested on Solana Seeker. Download the APK from [Releases](https://github.com/Arnon-hs/kindee-app/releases).
+- **iPhone:** SwiftUI pilot built and checked in an iPhone 16 simulator. The simulator app is **not** an IPA for a physical iPhone.
+- **Real menu pilot:** limited to tested sources near Homa Phuket Town, Phuket. LINE MAN-linked menus and VIVA's merchant menu are available through the private Kindee server; Grab is not connected.
+- **Food AI:** the approved Kindee account calls the server. OpenAI credentials stay on the server; results are estimates to review before logging.
 
-Open client applications for KinDee: choose food around your goals, time and budget.
+![Kindee Today in the iPhone simulator, synthetic test profile](docs/screenshots/today-connected.png)
 
-- [Presentation](https://kindee-eat-well.arnon-hs.chatgpt.site/)
-- [Try the public app](https://kindee-eat-well.arnon-hs.chatgpt.site/app/)
-- [Releases](https://github.com/Arnon-hs/kindee-app/releases)
+[Try the public web demo](https://kindee-eat-well.arnon-hs.chatgpt.site/app/) · [Landing page](https://kindee-eat-well.arnon-hs.chatgpt.site/) · [Verification and limits](docs/IOS_CLOUD_TEST.md)
 
-## Included
+## Try the native pilot
 
-Vue PWA with recipes, portions, food diary, profile and progress; Android phone project with Health Connect bridge; Wear OS companion; iPhone and Apple Watch source projects with HealthKit/WatchConnectivity. Backend implementation is maintained in the private `kindee-platform` repository. No backend credentials or live GrabFood/LINE MAN adapter is included here.
+1. Download `Kindee-Android-Pilot.apk` from the current prerelease and install it on a test Android phone. It uses a Debug signing certificate; this is not a Play Store release.
+2. For Apple Silicon Simulator, download `Kindee-iPhone-Simulator.zip`, extract it, boot a simulator and install `calorietracker.app` with `xcrun simctl install booted /path/to/calorietracker.app`.
+3. Open Plan and sign in with an approved Kindee test account. Choose an address or location, review preferences, build the mixed week, then confirm Save. A plan does not log food as eaten.
+4. Connect Kindee AI from the account sheet. In Today, choose Add food → Photos, select a food photo, analyze it and review the result before saving it to the diary.
 
-## Run and verify
+The cloud pilot is access-controlled and budget-limited. Installing a binary does not provision server access. Camera, location and health access require the relevant user permissions. Orders are completed in the provider app after checking availability, address and final price.
 
-Requires Node.js 22+ and npm. From this repository root:
+For a real iPhone, open `native/ios/KindeePhonePilot.xcodeproj` in Xcode, choose your Apple Team for the app and extensions, connect the phone, enable Developer Mode when requested, then Run. HealthKit/iCloud/App Groups require compatible provisioning. A signed device IPA and TestFlight release are not supplied. See [native build instructions](native/README.md).
+
+## Source layout
+
+| Path | Purpose |
+| --- | --- |
+| `native/android`, `native/ios` | Current Fud AI-based Kindee pilot, with original notices retained |
+| `native/shared`, `native/local-models/legal` | Shared manifests, 96 Debug sample frames and offline notices; no model weights |
+| `src`, root `android`, root `ios` | Earlier Vue PWA and Capacitor/Watch projects, retained separately |
+| `docs/IOS_CLOUD_TEST.md` | Actual simulator/server checks and their limits |
+| `anti-slop/` | Measured Vue audit and a staged quality rollout plan |
+
+The Laravel API and menu collectors live in the private `kindee-platform` repository. This public repository contains clients, not the backend or its credentials.
+
+## Build the retained web client
+
+Requires Node.js 22+ and npm. The tests include a check of built PWA files, so build first:
 
 ```sh
 npm ci
 KINDEE_PUBLIC_DEMO=true npm run build
 KINDEE_PUBLIC_DEMO=true npm test
+npm run test:state
 npm run dev
 ```
 
-The public demo uses an explicitly illustrative recipe snapshot. Personal demo entries stay in tab memory and disappear on reload. The normal build uses a separately deployed Laravel API; for local development Vite proxies `/api` to `http://localhost:8080`. A clone of the private platform can run alongside this repository for the full account flow.
+The public demo uses an illustrative recipe catalog and keeps personal entries only in tab memory until reload. The authenticated client needs a separately deployed API. Earlier native/Watch instructions remain in [docs](docs/HEALTH_AND_ONBOARDING.md); they do not certify the new pilot or physical watch synchronization.
 
-Install the PWA on iPhone with Safari → Share → Add to Home Screen; on Android with Chrome → Install app. HTTPS is required outside localhost. See [PWA instructions](docs/PWA.md).
+## Design and agent checks
 
-## Native builds
+Read [DESIGN.md](DESIGN.md), [AGENTS.md](AGENTS.md) and [skill usage](docs/SKILLS.md). The anti-slop audit was applied to Vue/TypeScript. It is not a Swift/Kotlin checker, and its proposed hooks/lint gates are not silently enabled. No new design framework replaces the existing native controls.
 
-Android: JDK 21, Android SDK platform 36 and build-tools 35.0.0/36.0.0. Set JAVA_HOME and ANDROID_HOME, then run `npm run build:android`. This builds both phone and Wear OS debug APKs. Debug permits local HTTP for development; production requires HTTPS. Phone and watch must use matching signing certificates. The app does not bypass health permissions.
+## License and support
 
-Apple: on a Mac with Xcode, XcodeGen and CocoaPods, run `npm run build:apple` for unsigned simulator builds. Real-device installs require your Apple team and provisioning. No iPhone IPA or watchOS binary was built in the Linux workspace. Proprietary/Amazfit watch support remains unconfirmed.
+Original Kindee client source retains its [MIT license](LICENSE). The native pilot derives from [Fud AI](https://github.com/apoorvdarshan/fud-ai) by Apoorv Darshan under its preserved [MIT license](native/LICENSE). Dependencies, photographs, exercise assets and optional models keep their own terms; see [NOTICE.md](NOTICE.md).
 
-See [health/onboarding details](docs/HEALTH_AND_ONBOARDING.md). Actual physical watch/phone synchronization has not been validated. Activity is not treated as a measured weight-loss result, and sources must not be summed twice.
-
-## CI and releases
-
-GitHub Actions builds/tests the PWA and compiles Android phone and Wear OS APKs. A `release:` commit or manual workflow run publishes a prerelease after those jobs pass. Apple builds remain a documented Mac workflow; no signed Apple release is claimed. Release artifacts are for testing, not a production medical or dietary service.
-
-Original client source: MIT. Photography and dependencies retain their own licenses; see [NOTICE.md](NOTICE.md).
+Use [GitHub issues](https://github.com/Arnon-hs/kindee-app/issues) for reproducible non-sensitive bug reports. Do not include provider keys, session tokens or health records. This is a test release; measured food nutrition, universal delivery coverage, physical Apple Health/watch synchronization and production readiness are not claimed.

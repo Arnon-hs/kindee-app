@@ -1,0 +1,193 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Diary date": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дата дневника"
+          }
+        }
+      }
+    },
+    "Add food": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить еду"
+          }
+        }
+      }
+    },
+    "Meal plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Рацион"
+          }
+        }
+      }
+    },
+    "From your plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Из вашего плана"
+          }
+        }
+      }
+    },
+    "View plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Весь план"
+          }
+        }
+      }
+    },
+    "Open meal plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть план"
+          }
+        }
+      }
+    },
+    "Planned, not logged as eaten.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В плане, пока не съедено."
+          }
+        }
+      }
+    },
+    "Loading saved plan…": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загружаем план…"
+          }
+        }
+      }
+    },
+    "Your next meal starts with a plan.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выберите следующий прием пищи."
+          }
+        }
+      }
+    },
+    "Connect Kindee to see your saved meals here. Your diary works independently.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключите Kindee, чтобы видеть блюда из плана. Дневник уже работает."
+          }
+        }
+      }
+    },
+    "No saved meals for this day. Build a mixed plan with cooking, cafes and delivery.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На этот день плана нет. Выберите блюда из готовки, кафе и доставки."
+          }
+        }
+      }
+    },
+    "Couldn't load your saved plan. Open Plan to try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "План не загрузился. Откройте его и повторите попытку."
+          }
+        }
+      }
+    },
+    "%@ of %@ %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ из %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "%@ %@ remaining": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Осталось %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ %@ over target": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сверх цели: %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "kcal": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ккал"
+          }
+        }
+      }
+    },
+    "kJ": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "кДж"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

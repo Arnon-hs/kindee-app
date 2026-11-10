@@ -12,3 +12,17 @@ android/.gradle/
 ios/App/Pods/
 ios/App/build-watch/
 release/
+
+# Native pilot local outputs and credentials
+.native-build/
+native/**/build/
+native/**/.gradle/
+native/**/.kotlin/
+native/**/xcuserdata/
+native/**/local.properties
+native/**/keystore.properties
+native/**/oauth.properties
+native/**/*.jks
+native/**/*.keystore
+native/**/*.p12
+native/**/*.mobileprovision

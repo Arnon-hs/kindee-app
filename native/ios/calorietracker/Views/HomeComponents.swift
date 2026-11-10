@@ -1,0 +1,633 @@
+import SwiftUI
+
+// MARK: - Week Day Selector
+
+struct WeekEnergyStrip: View {
+    @Binding var selectedDate: Date
+    let caloriesForDate: (Date) -> Int
+    let calorieGoal: Int
+    @AppStorage("weekStartsOnMonday") private var weekStartsOnMonday = true
+    /// Two-way scroll position (the visible week's index). Driven programmatically when the selected
+    /// day moves to another week, and updated by the user's own paging.
+    @State private var scrolledWeek: Int?
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private static let totalWeeks = 53 // ~1 year of history
+    private static let currentWeekIndex = totalWeeks - 1
+
+    private var calendar: Calendar {
+        var cal = Calendar.current
+        cal.firstWeekday = weekStartsOnMonday ? 2 : 1 // 2 = Monday, 1 = Sunday
+        return cal
+    }
+
+    private func weekDates(for weekOffset: Int) -> [Date] {
+        let cal = calendar
+        let today = cal.startOfDay(for: .now)
+        // Find start of current week
+        let weekday = cal.component(.weekday, from: today)
+        let firstWeekday = cal.firstWeekday
+        let daysBack = (weekday - firstWeekday + 7) % 7
+        let startOfCurrentWeek = cal.date(byAdding: .day, value: -daysBack, to: today)!
+        // Offset to the requested week
+        let offset = weekOffset - Self.currentWeekIndex
+        let startOfWeek = cal.date(byAdding: .weekOfYear, value: offset, to: startOfCurrentWeek)!
+        return (0..<7).map { cal.date(byAdding: .day, value: $0, to: startOfWeek)! }
+    }
+
+    /// Start of the week (respecting the Mon/Sun setting) containing `date`.
+    private func weekStart(for date: Date) -> Date {
+        let cal = calendar
+        let day = cal.startOfDay(for: date)
+        let weekday = cal.component(.weekday, from: day)
+        let daysBack = (weekday - cal.firstWeekday + 7) % 7
+        return cal.date(byAdding: .day, value: -daysBack, to: day)!
+    }
+
+    private func weekIndex(for date: Date) -> Int {
+        let cal = calendar
+        // Count days between the two WEEK-STARTS (an exact multiple of 7, possibly negative) and
+        // divide by 7. Diffing against a mid-week date with `.weekOfYear` truncates and would keep
+        // returning the current week for any day in an adjacent week less than 7 days away.
+        let days = cal.dateComponents([.day], from: weekStart(for: .now), to: weekStart(for: date)).day ?? 0
+        return Self.currentWeekIndex + Int((Double(days) / 7.0).rounded())
+    }
+
+    var body: some View {
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                DatePicker(selection: $selectedDate, displayedComponents: .date) {
+                    Text("Diary date", tableName: "Kindee")
+                }
+                .datePickerStyle(.compact)
+            } else {
+                weekStrip
+            }
+        }
+    }
+
+    private var weekStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 0) {
+                ForEach(0..<Self.totalWeeks, id: \.self) { weekIndex in
+                    weekRow(for: weekIndex)
+                        .containerRelativeFrame(.horizontal)
+                        .id(weekIndex)
+                }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollTargetBehavior(.paging)
+        // Start anchored at the most recent week so the strip shows the current week before the
+        // first layout pass; `scrolledWeek` then takes over for programmatic + user paging.
+        .defaultScrollAnchor(.trailing)
+        .scrollPosition(id: $scrolledWeek)
+        .onAppear {
+            if scrolledWeek == nil {
+                scrolledWeek = weekIndex(for: selectedDate)
+            }
+        }
+        .onChange(of: weekStartsOnMonday) { _, _ in
+            scrolledWeek = Self.currentWeekIndex
+        }
+        // Follow the selected day when it moves to a different week (e.g. the Home swipe steps
+        // across a week boundary), so the strip always shows the highlighted day.
+        .onChange(of: selectedDate) { _, newValue in
+            let target = weekIndex(for: newValue)
+            if scrolledWeek != target {
+                withAnimation(.snappy) { scrolledWeek = target }
+            }
+        }
+    }
+
+    private func weekRow(for weekIndex: Int) -> some View {
+        let dates = weekDates(for: weekIndex)
+        return HStack(spacing: 0) {
+            ForEach(0..<7, id: \.self) { index in
+                dayTile(for: dates[index])
+            }
+        }
+    }
+
+    private func dayTile(for date: Date) -> some View {
+        let cal = Calendar.current
+        let isSelected = cal.isDate(date, inSameDayAs: selectedDate)
+        let isToday = cal.isDateInToday(date)
+
+        return Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            withAnimation(.snappy(duration: 0.3)) {
+                selectedDate = date
+            }
+        } label: {
+            VStack(spacing: 6) {
+                Text(date.formatted(.dateTime.weekday(.narrow)))
+                    .font(.system(.caption2, design: .rounded, weight: .medium))
+                    .foregroundStyle(isSelected ? AppColors.calorie : Color.secondary.opacity(0.6))
+
+                Text(date.formatted(.dateTime.day()))
+                    .font(.system(.body, design: .rounded, weight: .semibold))
+                    .foregroundStyle(isSelected ? .white : (isToday ? AppColors.calorie : .primary))
+                    .frame(width: 36, height: 36)
+                    .background {
+                        if isSelected {
+                            Circle()
+                                .fill(LinearGradient(colors: AppColors.calorieGradient, startPoint: .topLeading, endPoint: .bottomTrailing))
+                                .shadow(color: AppColors.calorie.opacity(0.35), radius: 6, y: 3)
+                        } else if isToday {
+                            Circle()
+                                .strokeBorder(AppColors.calorie.opacity(0.35), lineWidth: 1.5)
+                        }
+                    }
+            }
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Home Nutrient Cards
+
+enum HomeTopNutrient: String, CaseIterable, Identifiable {
+    case protein
+    case carbs
+    case fat
+    case fiber
+    case sugar
+    case addedSugar
+    case saturatedFat
+    case cholesterol
+    case caffeine
+    case sodium
+    case potassium
+    case transFat
+    case calcium
+    case iron
+    case magnesium
+    case zinc
+    case vitaminA
+    case vitaminC
+    case vitaminD
+    case vitaminB12
+    case vitaminE
+    case vitaminK
+    case folate
+    case omega3
+    case creatine
+    case betaAlanine
+    case lCitrulline
+    case lCarnitine
+    case lArginine
+    case taurine
+    case betaine
+    case hmb
+
+    static let storageKey = "homeTopNutrients"
+    static let defaultSelection: [HomeTopNutrient] = [.protein, .carbs, .fat, .fiber]
+
+    var id: String { rawValue }
+
+    var optionalNutrient: OptionalNutrient? {
+        switch self {
+        case .fiber: .fiber
+        case .sugar: .sugar
+        case .addedSugar: .addedSugar
+        case .saturatedFat: .saturatedFat
+        case .cholesterol: .cholesterol
+        case .caffeine: .caffeine
+        case .creatine: .creatine
+        case .betaAlanine: .betaAlanine
+        case .lCitrulline: .lCitrulline
+        case .lCarnitine: .lCarnitine
+        case .lArginine: .lArginine
+        case .taurine: .taurine
+        case .betaine: .betaine
+        case .hmb: .hmb
+        case .sodium: .sodium
+        case .potassium: .potassium
+        case .transFat: .transFat
+        case .calcium: .calcium
+        case .iron: .iron
+        case .magnesium: .magnesium
+        case .zinc: .zinc
+        case .vitaminA: .vitaminA
+        case .vitaminC: .vitaminC
+        case .vitaminD: .vitaminD
+        case .vitaminB12: .vitaminB12
+        case .vitaminE: .vitaminE
+        case .vitaminK: .vitaminK
+        case .folate: .folate
+        case .omega3: .omega3
+        case .protein, .carbs, .fat: nil
+        }
+    }
+
+    var displayName: String {
+        if let optionalNutrient {
+            return optionalNutrient.shortDisplayName
+        }
+
+        switch self {
+        case .protein: return LocalizedDisplayText.text("Protein", polish: "Białko")
+        case .carbs: return LocalizedDisplayText.text("Carbs", polish: "Węglowodany")
+        case .fat: return LocalizedDisplayText.text("Fat", polish: "Tłuszcz")
+        case .fiber, .sugar, .addedSugar, .saturatedFat, .cholesterol, .caffeine, .sodium, .potassium,
+             .transFat, .calcium, .iron, .magnesium, .zinc, .vitaminA, .vitaminC, .vitaminD,
+             .vitaminB12, .vitaminE, .vitaminK, .folate, .omega3, .creatine, .betaAlanine,
+             .lCitrulline, .lCarnitine, .lArginine, .taurine, .betaine, .hmb:
+            return optionalNutrient?.shortDisplayName ?? rawValue
+        }
+    }
+
+    var unit: String {
+        if let optionalNutrient {
+            return optionalNutrient.unit
+        }
+
+        switch self {
+        case .protein, .carbs, .fat: return "g"
+        case .fiber, .sugar, .addedSugar, .saturatedFat, .cholesterol, .caffeine, .sodium, .potassium,
+             .transFat, .calcium, .iron, .magnesium, .zinc, .vitaminA, .vitaminC, .vitaminD,
+             .vitaminB12, .vitaminE, .vitaminK, .folate, .omega3, .creatine, .betaAlanine,
+             .lCitrulline, .lCarnitine, .lArginine, .taurine, .betaine, .hmb:
+            return optionalNutrient?.unit ?? "g"
+        }
+    }
+
+    var iconName: String {
+        if let optionalNutrient {
+            return optionalNutrient.iconName
+        }
+
+        switch self {
+        case .protein: return "fork.knife"
+        case .carbs: return "leaf"
+        case .fat: return "drop.fill"
+        case .fiber, .sugar, .addedSugar, .saturatedFat, .cholesterol, .caffeine, .sodium, .potassium,
+             .transFat, .calcium, .iron, .magnesium, .zinc, .vitaminA, .vitaminC, .vitaminD,
+             .vitaminB12, .vitaminE, .vitaminK, .folate, .omega3, .creatine, .betaAlanine,
+             .lCitrulline, .lCarnitine, .lArginine, .taurine, .betaine, .hmb:
+            return optionalNutrient?.iconName ?? "circle"
+        }
+    }
+
+    var gradientColors: [Color] {
+        switch self {
+        case .protein:
+            AppColors.proteinGradient
+        case .carbs:
+            AppColors.carbsGradient
+        case .fat:
+            AppColors.fatGradient
+        default:
+            AppColors.calorieGradient
+        }
+    }
+
+    func value(from foodStore: FoodStore, on date: Date) -> Double {
+        total(in: foodStore.entries(for: date))
+    }
+
+    /// Sum this nutrient across an already-fetched day (or range) of entries.
+    /// Prefer this in Progress aggregates so we don't re-filter FoodStore per nutrient.
+    func total(in entries: [FoodEntry]) -> Double {
+        switch self {
+        case .protein: entries.reduce(0) { $0 + $1.protein }
+        case .carbs: entries.reduce(0) { $0 + $1.carbs }
+        case .fat: entries.reduce(0) { $0 + $1.fat }
+        case .fiber: entries.reduce(0) { $0 + ($1.fiber ?? 0) }
+        case .sugar: entries.reduce(0) { $0 + ($1.sugar ?? 0) }
+        case .addedSugar: entries.reduce(0) { $0 + ($1.addedSugar ?? 0) }
+        case .saturatedFat: entries.reduce(0) { $0 + ($1.saturatedFat ?? 0) }
+        case .cholesterol: entries.reduce(0) { $0 + ($1.cholesterol ?? 0) }
+        case .caffeine: entries.reduce(0) { $0 + ($1.caffeine ?? 0) }
+        case .creatine: entries.reduce(0) { $0 + ($1.supplementalNutrients[SupplementalNutrient.creatine.rawValue] ?? 0) }
+        case .betaAlanine: entries.reduce(0) { $0 + ($1.supplementalNutrients[SupplementalNutrient.betaAlanine.rawValue] ?? 0) }
+        case .lCitrulline: entries.reduce(0) { $0 + ($1.supplementalNutrients[SupplementalNutrient.lCitrulline.rawValue] ?? 0) }
+        case .lCarnitine: entries.reduce(0) { $0 + ($1.supplementalNutrients[SupplementalNutrient.lCarnitine.rawValue] ?? 0) }
+        case .lArginine: entries.reduce(0) { $0 + ($1.supplementalNutrients[SupplementalNutrient.lArginine.rawValue] ?? 0) }
+        case .taurine: entries.reduce(0) { $0 + ($1.supplementalNutrients[SupplementalNutrient.taurine.rawValue] ?? 0) }
+        case .betaine: entries.reduce(0) { $0 + ($1.supplementalNutrients[SupplementalNutrient.betaine.rawValue] ?? 0) }
+        case .hmb: entries.reduce(0) { $0 + ($1.supplementalNutrients[SupplementalNutrient.hmb.rawValue] ?? 0) }
+        case .sodium: entries.reduce(0) { $0 + ($1.sodium ?? 0) }
+        case .potassium: entries.reduce(0) { $0 + ($1.potassium ?? 0) }
+        case .transFat: entries.reduce(0) { $0 + ($1.transFat ?? 0) }
+        case .calcium: entries.reduce(0) { $0 + ($1.calcium ?? 0) }
+        case .iron: entries.reduce(0) { $0 + ($1.iron ?? 0) }
+        case .magnesium: entries.reduce(0) { $0 + ($1.magnesium ?? 0) }
+        case .zinc: entries.reduce(0) { $0 + ($1.zinc ?? 0) }
+        case .vitaminA: entries.reduce(0) { $0 + ($1.vitaminA ?? 0) }
+        case .vitaminC: entries.reduce(0) { $0 + ($1.vitaminC ?? 0) }
+        case .vitaminD: entries.reduce(0) { $0 + ($1.vitaminD ?? 0) }
+        case .vitaminB12: entries.reduce(0) { $0 + ($1.vitaminB12 ?? 0) }
+        case .vitaminE: entries.reduce(0) { $0 + ($1.vitaminE ?? 0) }
+        case .vitaminK: entries.reduce(0) { $0 + ($1.vitaminK ?? 0) }
+        case .folate: entries.reduce(0) { $0 + ($1.folate ?? 0) }
+        case .omega3: entries.reduce(0) { $0 + ($1.omega3 ?? 0) }
+        }
+    }
+
+    func goal(for profile: UserProfile, optionalGoals: OptionalNutrientGoals = .current) -> Double {
+        switch self {
+        case .protein: return Double(profile.effectiveProtein)
+        case .carbs: return Double(profile.effectiveCarbs)
+        case .fat: return Double(profile.effectiveFat)
+        case .fiber, .sugar, .addedSugar, .saturatedFat, .cholesterol, .caffeine, .sodium, .potassium,
+             .transFat, .calcium, .iron, .magnesium, .zinc, .vitaminA, .vitaminC, .vitaminD,
+             .vitaminB12, .vitaminE, .vitaminK, .folate, .omega3, .creatine, .betaAlanine,
+             .lCitrulline, .lCarnitine, .lArginine, .taurine, .betaine, .hmb:
+            guard let optionalNutrient else { return 0 }
+            return Double(optionalGoals.goal(for: optionalNutrient))
+        }
+    }
+
+    static func selection(from rawValue: String) -> [HomeTopNutrient] {
+        let parsed = rawValue
+            .split(separator: ",")
+            .compactMap { HomeTopNutrient(rawValue: String($0)) }
+
+        var selection: [HomeTopNutrient] = []
+        for nutrient in parsed {
+            guard !selection.contains(nutrient) else { continue }
+            selection.append(nutrient)
+            if selection.count == 4 { break }
+        }
+        return selection.isEmpty ? defaultSelection : selection
+    }
+
+    static func storageValue(for nutrients: [HomeTopNutrient]) -> String {
+        nutrients
+            .prefix(4)
+            .map(\.rawValue)
+            .joined(separator: ",")
+    }
+
+    /// Nutrient pillars on Home (water is a separate fixed card when tracking is on).
+    static func displayedOnHome(from rawValue: String) -> [HomeTopNutrient] {
+        selection(from: rawValue)
+    }
+}
+
+struct HomeNutrientPickerSheet: View {
+    let waterTrackingEnabled: Bool
+    @Binding var selectionRawValue: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var draftSelection: [HomeTopNutrient]
+
+    init(selectionRawValue: Binding<String>, waterTrackingEnabled: Bool) {
+        let storedSelection = HomeTopNutrient.selection(from: selectionRawValue.wrappedValue)
+        self.waterTrackingEnabled = waterTrackingEnabled
+        _selectionRawValue = selectionRawValue
+        _draftSelection = State(initialValue: Array(storedSelection.prefix(4)))
+    }
+
+    private var selectionLimit: Int { 4 }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Shown on Home") {
+                    ForEach(Array(draftSelection.enumerated()), id: \.element.id) { index, nutrient in
+                        HStack(spacing: 12) {
+                            Label(nutrient.displayName, systemImage: nutrient.iconName)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Text("\(index + 1)")
+                                .font(.system(.caption, design: .rounded, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    if waterTrackingEnabled {
+                        HStack(spacing: 12) {
+                            Label("Water", systemImage: "drop.fill")
+                                .foregroundStyle(AppColors.calorie)
+                            Spacer()
+                            Text("\(draftSelection.count + 1)")
+                                .font(.system(.caption, design: .rounded, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                            Image(systemName: "lock.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Water, shown after selected nutrients")
+                    }
+                }
+                .listRowBackground(AppColors.appCard)
+
+                Section {
+                    ForEach(HomeTopNutrient.allCases) { nutrient in
+                        Button {
+                            toggle(nutrient)
+                        } label: {
+                            HStack(spacing: 12) {
+                                Label(nutrient.displayName, systemImage: nutrient.iconName)
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                if draftSelection.contains(nutrient) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(AppColors.calorie)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                } header: {
+                    Text("Choose 1–4 Nutrients")
+                } footer: {
+                    if waterTrackingEnabled {
+                        Text("Pick one to four nutrients. Water is shown after them while tracking is enabled.")
+                    } else {
+                        Text("Pick one to four nutrients for the Home summary row.")
+                    }
+                }
+                .listRowBackground(AppColors.appCard)
+            }
+            .scrollContentBackground(.hidden)
+            .background(AppColors.appBackground)
+            .navigationTitle("Home Nutrients")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Reset") {
+                        draftSelection = Array(HomeTopNutrient.defaultSelection.prefix(selectionLimit))
+                    }
+                    .tint(AppColors.calorie)
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        selectionRawValue = HomeTopNutrient.storageValue(for: draftSelection)
+                        dismiss()
+                    }
+                    .tint(AppColors.calorie)
+                    .disabled(draftSelection.isEmpty || draftSelection.count > selectionLimit)
+                }
+            }
+        }
+    }
+
+    private func toggle(_ nutrient: HomeTopNutrient) {
+        if let index = draftSelection.firstIndex(of: nutrient) {
+            guard draftSelection.count > 1 else { return }
+            draftSelection.remove(at: index)
+        } else if draftSelection.count < selectionLimit {
+            draftSelection.append(nutrient)
+        } else {
+            draftSelection.removeLast()
+            draftSelection.append(nutrient)
+        }
+    }
+}
+
+// MARK: - Macro Card
+
+struct MacroCard: View {
+    let label: String
+    let current: Double
+    let goal: Double
+    let unit: String
+    let gradientColors: [Color]
+
+    init(label: String, current: Int, goal: Int, gradientColors: [Color]) {
+        self.label = label
+        self.current = Double(current)
+        self.goal = Double(goal)
+        self.unit = "g"
+        self.gradientColors = gradientColors
+    }
+
+    init(label: String, current: Double, goal: Double, unit: String, gradientColors: [Color]) {
+        self.label = label
+        self.current = current
+        self.goal = goal
+        self.unit = unit
+        self.gradientColors = gradientColors
+    }
+
+    private var progress: Double {
+        goal > 0 ? min(current / goal, 1.0) : 0
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                Text(formatted(current))
+                    .font(.system(.title, design: .rounded, weight: .bold))
+                    .foregroundStyle(gradientColors.first ?? .primary)
+                Text("/\(formatted(goal))\(unit)")
+                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(gradientColors.first?.opacity(0.12) ?? Color.gray.opacity(0.12))
+
+                    Capsule()
+                        .fill(LinearGradient(colors: gradientColors, startPoint: .leading, endPoint: .trailing))
+                        .frame(width: max(6, geo.size.width * progress))
+                        .shadow(color: (gradientColors.first ?? .clear).opacity(0.3), radius: 4, y: 2)
+                        .animation(.spring(response: 0.8, dampingFraction: 0.75), value: progress)
+                }
+            }
+            .frame(height: 6)
+
+            Text(LocalizedDisplayText.text(label))
+                .font(.system(.caption, design: .rounded, weight: .medium))
+                .foregroundStyle(.secondary)
+
+            Text(String(format: LocalizedDisplayText.text("%@ left"), "\(formatted(max(goal - current, 0)))\(unit)"))
+                .font(.system(.caption2, design: .rounded))
+                .foregroundStyle(.tertiary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func formatted(_ value: Double) -> String {
+        if unit == "kcal" {
+            return "\(Int(value.rounded()))"
+        }
+        return MacroValueFormatter.string(value)
+    }
+}
+
+/// Semicircle speedometer-style gauge for total calories — segmented (dashed) accent arc with the
+/// calorie count, "Calories" label, and remaining read out in the center. Flat, no card.
+struct CalorieGauge: View {
+    let eaten: Int
+    let goal: Int
+    var title: String = String(localized: "Today")
+    var burnLine: String? = nil
+    var launchFillEpoch: Int = 0
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
+    private var unitLabel: String {
+        energyUnit == .kj ? String(localized: "kJ", table: "Kindee") : String(localized: "kcal", table: "Kindee")
+    }
+    var body: some View {
+        VStack(alignment:.leading,spacing:12) {
+            Text(title).font(.largeTitle.bold())
+            Text("\(energyUnit.displayValue(kcal:eaten).formatted()) of \(energyUnit.displayValue(kcal:goal).formatted()) \(unitLabel)", tableName: "Kindee").font(.title3.weight(.semibold)).foregroundStyle(AppColors.calorie)
+            ProgressView(value:goal>0 ? min(max(Double(eaten)/Double(goal),0),1) : 0).tint(AppColors.calorie)
+            if goal > 0 {
+                Group {
+                    if eaten > goal {
+                        Text("\(energyUnit.displayValue(kcal: eaten - goal).formatted()) \(unitLabel) over target", tableName: "Kindee")
+                    } else {
+                        Text("\(energyUnit.displayValue(kcal: goal - eaten).formatted()) \(unitLabel) remaining", tableName: "Kindee")
+                    }
+                }
+                .font(.subheadline).foregroundStyle(Color.primary.opacity(0.72))
+            }
+            if let burnLine { Text(burnLine).font(.footnote).foregroundStyle(Color.primary.opacity(0.72)) }
+        }.frame(maxWidth:.infinity,alignment:.leading).padding(.vertical,12)
+    }
+}
+
+struct MacroVerticalBar: View {
+    let label: String
+    let current: Double
+    let goal: Double
+    let unit: String
+    let gradient: [Color]
+    var launchFillEpoch: Int = 0
+    var body: some View {
+        VStack(alignment:.leading,spacing:6) {
+            Text(LocalizedDisplayText.text(label)).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            Text("\(MacroValueFormatter.string(current))\(unit)").font(.headline)
+            Text(goal>0 ? "of \(MacroValueFormatter.string(goal))\(unit)" : "No target").font(.caption).foregroundStyle(.secondary)
+        }.frame(maxWidth:.infinity,alignment:.leading).padding(.vertical,8)
+    }
+}
+
+// MARK: - Daily Steps (HealthKit)
+
+struct DailyStepsRow: View {
+    let steps: Int
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "figure.walk")
+                .font(.system(size: 16, weight: .medium))
+            Text(stepsLabel)
+                .font(.system(.body, design: .rounded, weight: .medium))
+        }
+        .foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, 4)
+    }
+
+    private var stepsLabel: String {
+        String(localized: "\(steps) steps")
+    }
+}
