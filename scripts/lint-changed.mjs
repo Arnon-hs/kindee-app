@@ -2,10 +2,10 @@ import {execFileSync, spawnSync} from 'node:child_process';
 import {existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
+import {isLintInput} from './quality-scope.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const oxlint = fileURLToPath(new URL('../node_modules/oxlint/bin/oxlint', import.meta.url));
-const rootConfigs = new Set(['vite.config.ts', 'capacitor.config.ts', 'knip.config.ts, openapi-ts.config.ts']);
 
 function git(args) {
   return execFileSync('git', args, {cwd: root, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024});
@@ -21,8 +21,7 @@ function readBase(args) {
 
 function isWebSource(path) {
   if (!existsSync(join(root, path))) return false;
-  if (rootConfigs.has(path)) return true;
-  return /^(src|tests|scripts)\//.test(path) && /\.(?:[cm]?[jt]sx?|vue)$/.test(path);
+  return isLintInput(path);
 }
 
 function changedFiles(base) {

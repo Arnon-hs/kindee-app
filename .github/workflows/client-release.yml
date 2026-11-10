@@ -6,7 +6,36 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: kindee-client-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      KINDEE_DIFF_BASE: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD^' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+        id: install
+      - name: Report full lint backlog
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run lint
+      - name: Reject warnings in changed source
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run lint:changed -- --base "$KINDEE_DIFF_BASE"
+      - name: Reject dead code
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run deadcode:check
+      - name: Reject qualifying clones
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run dup
   web:
     runs-on: ubuntu-latest
     env:
@@ -58,7 +87,7 @@ jobs:
           if-no-files-found: error
   release:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.event.head_commit.message, 'release:'))
-    needs: [web, android]
+    needs: [quality, web, android]
     runs-on: ubuntu-latest
     permissions:
       contents: write

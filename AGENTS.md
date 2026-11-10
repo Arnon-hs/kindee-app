@@ -17,14 +17,15 @@ Roll out one agreed step from anti-slop/todo.md; anti-slop/plan.md records the r
 - Fix or explain findings. Do not add TypeScript ignores or disable comments to make a check pass.
 - Each exclusion needs its reason in the config, or in docs/QUALITY_CHECKS.md when the tool only accepts strict JSON. Review exceptions when they grow.
 - After a real bug fix, identify the regression check that would have caught it. Add a custom rule only for a demonstrated incident or measured recurring cost.
-- Full-project warnings remain a report; Knip currently has zero findings. Changed web source must pass lint:changed. API generation/source drift is checked in CI; general hooks, other new CI gates and mutation testing remain planned.
+- Full-project warnings remain a report; changed source, API integrity, zero dead code and qualifying clones have CI checks. Git pre-commit validates index content. Codex Stop is configured and protocol-tested, with automatic activation pending the user's hook trust review. See docs/QUALITY_HOOKS.md.
 
 Commands, after npm ci (Node 22.12+):
 
 - npm run lint: full scoped Oxlint warning report, including the existing 10-warning backlog.
 - npm run lint:changed: fail on warnings in committed/staged/dirty/untracked web files against the merge base with origin/master. Use -- --base HEAD for only local edits; fetch origin first for branch review. Checks working-tree content, not an isolated staged snapshot.
-- npm run deadcode: Knip report, currently zero findings; inspect the report because this command does not enforce the count yet.
+- npm run deadcode: Knip report. npm run deadcode:check enforces zero findings and is used by hooks/CI.
 - npm run dup: zero qualifying text clones, including Vue scripts/templates/styles at the documented thresholds.
 - npm run api:check and npm run api:check:server: generated output integrity and live backend schema drift. See docs/API_CONTRACT.md before updating the pin. Account success responses use generated runtime validators; other features have not migrated yet.
+- npm run agent:check: run before handing back changed web/tooling work. npm run precommit:check verifies staged bytes, including deletions. Codex Stop runs only after its project hook is trusted; never bypass trust or claim automatic execution from a manual run.
 
 Run these commands when changing their inputs and keep reports under gitignored reports/. See docs/QUALITY_CHECKS.md for scope, exclusion reasons and planted checks. Keep native builds separate and serialized.

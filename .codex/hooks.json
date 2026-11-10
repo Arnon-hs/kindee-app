@@ -1,0 +1,8 @@
+{
+  "description": "Kindee web quality checks. No native builds or provider requests.",
+  "hooks": {
+    "Stop": [
+      {"hooks": [{"type": "command", "command": "node \"$(git rev-parse --show-toplevel)/scripts/codex-stop.mjs\"", "timeout": 30, "statusMessage": "Checking Kindee web changes"}]}
+    ]
+  }
+}
