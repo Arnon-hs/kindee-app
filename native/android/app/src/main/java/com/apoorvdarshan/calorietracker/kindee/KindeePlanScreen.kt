@@ -42,6 +42,7 @@ import androidx.health.connect.client.PermissionController
 import com.apoorvdarshan.calorietracker.AppContainer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import org.json.JSONObject
 import java.time.LocalDate
@@ -65,6 +66,8 @@ internal fun KindeePlanScreen(container: AppContainer, openSettings: () -> Unit,
     var place by remember { mutableStateOf<FoodPlace?>(null) }
     var menuNote by remember { mutableStateOf("Saved menus · Confirm availability") }
     var offers by remember { mutableStateOf<List<JSONObject>>(emptyList()) }
+    var mapPlaces by remember { mutableStateOf<List<JSONObject>>(emptyList()) }
+    var mapState by remember { mutableStateOf("") }
     var previousPlacePlan by remember { mutableStateOf(false) }
     var saved by remember { mutableStateOf<List<JSONObject>>(emptyList()) }
     var draft by remember { mutableStateOf<PlanDraft?>(null) }
@@ -93,7 +96,7 @@ internal fun KindeePlanScreen(container: AppContainer, openSettings: () -> Unit,
             catch (e: Exception) { problem = e.message ?: "Could not complete this request. Try again." }
             finally {
                 connected = client.connected; busy = false
-                if (!connected) { profile = null; saved = emptyList(); offers = emptyList(); draft = null; place = null }
+                if (!connected) { profile = null; saved = emptyList(); offers = emptyList(); draft = null; place = null; mapPlaces = emptyList(); mapState = "" }
             }
         }
     }
@@ -116,7 +119,7 @@ internal fun KindeePlanScreen(container: AppContainer, openSettings: () -> Unit,
             previousPlacePlan = saved.isNotEmpty() || previousPlacePlan
             saved = emptyList()
         }
-        place = next; draft = null; matches = emptyList(); addressSheet = false
+        place = next; draft = null; matches = emptyList(); addressSheet = false; mapPlaces = emptyList(); mapState = ""
         perform { offers = client.nearby(next); menuNote = client.menuStatus }
     }
     val healthPermissions = rememberLauncherForActivityResult(PermissionController.createRequestPermissionResultContract()) { granted ->
@@ -165,7 +168,7 @@ internal fun KindeePlanScreen(container: AppContainer, openSettings: () -> Unit,
                 }
                 item {
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                        listOf("My plan","Nearby menus").forEachIndexed { index,label ->
+                        listOf("My plan","Nearby").forEachIndexed { index,label ->
                             SegmentedButton(selected=nearby==(index==1),onClick={nearby=index==1},shape=SegmentedButtonDefaults.itemShape(index,2)) { Text(label) }
                         }
                     }
@@ -235,6 +238,37 @@ internal fun KindeePlanScreen(container: AppContainer, openSettings: () -> Unit,
                         MealOffer(row,true) { openKindeeOffer(context,row.optJSONObject("menu_item") ?: row) }
                     }
                 } else {
+                    item {
+                        Text("Places nearby · 2 km",style=MaterialTheme.typography.titleMedium)
+                        TextButton(enabled=!busy,onClick={ perform {
+                            val selected=place ?: error("Choose an address first")
+                            val query="meal-plans/nearby-places?lat=${selected.latitude}&lng=${selected.longitude}&radius_m=2000"
+                            var result=if(mapState=="refreshing") client.request(query) else client.request("meal-plans/nearby-places","POST",JSONObject().put("lat",selected.latitude).put("lng",selected.longitude).put("radius_m",2000))
+                            for(attempt in 0 until 10) {
+                                mapState=result.optJSONObject("meta")?.optString("status") ?: "unavailable"
+                                if(mapState!="refreshing") break
+                                delay(2000)
+                                if(place!=selected) return@perform
+                                result=client.request(query)
+                            }
+                            if(place!=selected) return@perform
+                            mapState=result.optJSONObject("meta")?.optString("status") ?: "unavailable"
+                            mapPlaces=result.optJSONArray("data")?.objects() ?: emptyList()
+                            if(mapState!="ready" && mapState!="refreshing") message="Place search unavailable or its limit was reached. Menus and plan remain available."
+                        }}) { Text(if(mapState=="refreshing") "Check Google Maps results" else "Find restaurants & stores") }
+                        if(mapState=="refreshing") Text("Search running. Check results shortly.",style=MaterialTheme.typography.bodySmall)
+                        if(mapPlaces.isNotEmpty()) Text("Google Maps via Apify · Menus and calories not provided",style=MaterialTheme.typography.bodySmall)
+                    }
+                    itemsIndexed(mapPlaces,key={i,row->row.optString("id",i.toString())}) { _,row ->
+                        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                            googlePlaceUri(row.optString("photo_url"),true)?.let { photo -> AsyncImage(model=photo,contentDescription=null,modifier=Modifier.size(56.dp).clip(RoundedCornerShape(10.dp)),contentScale=ContentScale.Crop) }
+                            Column {
+                                Text(row.optString("name"),style=MaterialTheme.typography.titleSmall)
+                                Text("${row.optString("category")} · ${row.optInt("distance_m")} m",style=MaterialTheme.typography.bodySmall)
+                                googlePlaceUri(row.optString("maps_url"))?.let { url -> TextButton(onClick={runCatching { context.startActivity(Intent(Intent.ACTION_VIEW,url)) }}) { Text("Google Maps") } }
+                            }
+                        }
+                    }
                     if (offers.isEmpty() && !busy) item { Text("No saved menus here yet. Try another address or build a cooking plan.") }
                     itemsIndexed(offers,key={i,row -> "${row.optString("source_id")}-${i}"}) { _,row -> MealOffer(row,false) { openKindeeOffer(context,row) } }
                 }
@@ -381,3 +415,9 @@ private fun providerLabel(value:String):String = when(value) {
     "line_man" -> "LINE MAN"
     else -> "Menu observation"
 }
+
+internal fun googlePlaceUri(value: String, image: Boolean = false): Uri? = runCatching {
+    val uri=Uri.parse(value)
+    val hosts=if(image) setOf("lh3.googleusercontent.com","lh4.googleusercontent.com","lh5.googleusercontent.com") else setOf("google.com","www.google.com","maps.google.com")
+    uri.takeIf { it.scheme=="https" && it.userInfo==null && it.port == -1 && it.host?.lowercase(Locale.ROOT) in hosts }
+}.getOrNull()

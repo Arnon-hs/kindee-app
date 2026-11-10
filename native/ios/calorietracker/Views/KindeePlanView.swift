@@ -10,6 +10,8 @@ struct KindeePlanView: View {
     @State private var place: KindeePlace?
     @State private var profile: [String: Any] = [:]
     @State private var menus: [KindeeMeal] = []
+    @State private var mapPlaces: [[String:Any]] = []
+    @State private var mapState = ""
     @State private var saved: [KindeeMeal] = []
     @State private var preview: [KindeeMeal] = []
     @State private var previewFrom = ""
@@ -43,7 +45,7 @@ struct KindeePlanView: View {
             defer { busy = false }
             do { try await action() }
             catch { problem = error.localizedDescription }
-            if !server.connected { profile = [:]; menus = []; saved = []; preview = []; place = nil }
+            if !server.connected { profile = [:]; menus = []; saved = []; preview = []; place = nil; mapPlaces = []; mapState = "" }
         }
     }
     private func load() async throws {
@@ -60,7 +62,7 @@ struct KindeePlanView: View {
     private func choose(_ next: KindeePlace) {
         guard !busy else { return }
         if let old=place,abs(old.latitude-next.latitude)>0.00001 || abs(old.longitude-next.longitude)>0.00001 { saved=[] }
-        place = next; preview = []; addressSheet = false; matches = []
+        place = next; preview = []; addressSheet = false; matches = []; mapPlaces = []; mapState = ""
         perform { menus = try await server.menus(next) }
     }
     var body: some View {
@@ -81,11 +83,43 @@ struct KindeePlanView: View {
                     Section {
                         Button { addressSheet = true } label: { Label(place?.label ?? "Choose an address", systemImage:"mappin.and.ellipse") }
                         Text("5 km · " + server.menuStatus).font(.footnote).foregroundStyle(.secondary)
-                        Picker("Show", selection:$nearby) { Text("My plan").tag(false); Text("Nearby menus").tag(true) }.pickerStyle(.segmented)
+                        Picker("Show", selection:$nearby) { Text("My plan").tag(false); Text("Nearby").tag(true) }.pickerStyle(.segmented)
                     }
                     if !nearby {
                         planSections
                     } else {
+                        Section("Places nearby · 2 km") {
+                            Button(mapState == "refreshing" ? "Check Google Maps results" : "Find restaurants & stores") {
+                                perform {
+                                    guard let selected = place else { throw KindeeServerError.message("Choose an address first") }
+                                    let query = "meal-plans/nearby-places?lat=\(selected.latitude)&lng=\(selected.longitude)&radius_m=2000"
+                                    var result = try await server.request(mapState == "refreshing" ? query : "meal-plans/nearby-places", method: mapState == "refreshing" ? "GET" : "POST", body: mapState == "refreshing" ? nil : ["lat":selected.latitude,"lng":selected.longitude,"radius_m":2000])
+                                    for _ in 0..<10 {
+                                        mapState = (result["meta"] as? [String:Any])?["status"] as? String ?? "unavailable"
+                                        if mapState != "refreshing" { break }
+                                        try await Task.sleep(for:.seconds(2))
+                                        guard place?.id == selected.id, server.connected else { return }
+                                        result = try await server.request(query)
+                                    }
+                                    guard place?.id == selected.id else { return }
+                                    mapState = (result["meta"] as? [String:Any])?["status"] as? String ?? "unavailable"
+                                    mapPlaces = result["data"] as? [[String:Any]] ?? []
+                                    if mapState != "ready" && mapState != "refreshing" { notice = "Place search unavailable or its limit was reached. Your menus and plan are still available." }
+                                }
+                            }
+                            if mapState == "refreshing" { Text("Search running. Check results shortly.").font(.footnote) }
+                            if !mapPlaces.isEmpty { Text("Google Maps via Apify · Menus and calories not provided").font(.caption).foregroundStyle(.secondary) }
+                            ForEach(Array(mapPlaces.enumerated()), id:\.offset) { _, row in
+                                HStack(alignment:.top, spacing:12) {
+                                    if let photo = kindeeGoogleURL(row["photo_url"], image:true) { AsyncImage(url:photo) { image in image.resizable().scaledToFill() } placeholder: { Color.secondary.opacity(0.1) }.frame(width:56,height:56).clipShape(RoundedRectangle(cornerRadius:10)) }
+                                    VStack(alignment:.leading, spacing:4) {
+                                        Text(row["name"] as? String ?? "Place").font(.headline)
+                                        Text("\(row["category"] as? String ?? "") · \(row["distance_m"] as? Int ?? 0) m").font(.caption).foregroundStyle(.secondary)
+                                        if let url = kindeeGoogleURL(row["maps_url"]) { Link("Google Maps",destination:url).font(.subheadline) }
+                                    }
+                                }
+                            }
+                        }
                         Section("Nearby menus") {
                             if menus.isEmpty { Text("No menus here yet. Try another address or build a cooking plan.") }
                             ForEach(menus) { meal in KindeeMealRow(meal:meal,planned:false) }
@@ -275,4 +309,10 @@ struct KindeePlanView: View {
         guard let d=r["data"] as? [String:Any],let from=d["from"] as? String,let hash=d["preview_hash"] as? String,let entries=d["entries"] as? [[String:Any]] else { throw KindeeServerError.message("Invalid meal plan response") }
         previewFrom=from;previewHash=hash;requestID=UUID().uuidString;preview=entries.map{KindeeMeal(raw:$0)}
     }
+}
+
+private func kindeeGoogleURL(_ value: Any?, image: Bool = false) -> URL? {
+    guard let value = value as? String, let parts = URLComponents(string:value), parts.scheme == "https", parts.user == nil, parts.password == nil, parts.port == nil, let host = parts.host?.lowercased() else { return nil }
+    let hosts = image ? ["lh3.googleusercontent.com","lh4.googleusercontent.com","lh5.googleusercontent.com"] : ["google.com","www.google.com","maps.google.com"]
+    return hosts.contains(host) ? parts.url : nil
 }

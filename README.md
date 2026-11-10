@@ -6,6 +6,7 @@ Kindee helps you combine home cooking, nearby cafes and delivery in a meal plan,
 - **iPhone:** SwiftUI pilot built and checked in an iPhone 16 simulator. The simulator app is **not** an IPA for a physical iPhone.
 - **Real menu pilot:** limited to tested sources near Homa Phuket Town, Phuket. LINE MAN-linked menus and VIVA's merchant menu are available through the private Kindee server; Grab is not connected.
 - **Food AI:** the approved Kindee account calls the server. OpenAI credentials stay on the server; results are estimates to review before logging.
+- **Nearby places:** Google Maps via Apify finds restaurants and grocery stores for the selected coordinates. These directory listings stay separate from menus, calories and dietary recommendations. See [verification and limits](docs/APIFY_PLACES.md).
 
 ![Kindee Today in the iPhone simulator, synthetic test profile](docs/screenshots/today-connected.png)
 
