@@ -4,6 +4,8 @@ The MIT license covers original KinDee client source. It does not relicense thir
 
 Food photography retains the CC licenses and attribution recorded in public/food/CREDITS.md and src/data/food-photos.json. Do not remove required notices from redistributed copies. Package dependencies and Gradle wrapper retain their upstream licenses.
 
+The retained web client's generated response validators use Zod 4.6.7, copyright 2025 Colin McDonnell, under MIT. Its canonical license is distributed at public/licenses/zod-MIT.txt and copied into the web build. Hey API is a development generator; generated definitions do not replace upstream dependency notices.
+
 There are no server secrets or production user records in this repository. Health connections and workout measurements require supported native platforms, user consent and device testing. PWA alone cannot read HealthKit or Health Connect. A proprietary watch is not supported merely because it resembles Wear OS or Apple Watch.
 
 ## Current native pilot

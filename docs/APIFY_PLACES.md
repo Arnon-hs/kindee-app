@@ -17,10 +17,10 @@ These are directory listings. Their menus, calories and dietary suitability are 
 | Backend PHP 8.3/PostGIS tests | 60 tests, 593 assertions passed in an isolated test database |
 | Native Android | 1,000 unit tests passed and Debug APK built; test temp files on external disk |
 | iPhone | Swift contracts and signed arm64 Simulator build passed |
-| New Nearby screen on Simulator | Installation blocked by internal disk space; no new UI acceptance claimed |
+| New Nearby screen on Simulator | Initial installs failed for disk space. A later install succeeded, then launch failed with a SpringBoard error at about 115 MiB free; no new UI acceptance claimed |
 | Seeker | Not connected during this verification; fresh APK not installed on it |
 
-Only the dedicated Kindee API container was updated. All 44 other containers retained identity and start time. No database migration. The public runtime version was checked against release marker `2a3848106fa9e1e86c7bc08b449c2cb507e1b3119bc5bfc7ed3c33a65662dd19`.
+Only the dedicated Kindee API container was updated. The first Maps release preserved all 44 other containers. The later public-contract release preserved all 47 containers in its fresh baseline; no migrations. Its public health/version matched release marker `3f1922815b12d2074ad2bd0e68f29b229c4fffb461f501ca24a511652c39b49c`. Cached places and the 50 existing menu observations remained available after that update. Temporary test databases, containers, sessions and the contract-registration account were removed.
 
 The inspected FREE account charged USD 0.004 per place and USD 0.00005 for a 1 GB actor start. This is account-specific evidence, not a promise of future pricing or the advertised lowest price for other tiers. See the [provider listing](https://apify.com/compass/crawler-google-places).
 

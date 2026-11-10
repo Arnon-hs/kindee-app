@@ -18,6 +18,8 @@ Other web feature boundaries retain their existing handwritten types for now. Fu
 
 ## Verification
 
-Source-hash and generated-output drift plants failed and were removed. Malformed successful account responses were rejected. Forty-eight real account error outcomes matched the previous implementation; a deliberately wrong expected outcome was detected. Build, 32 tests and session isolation passed. Full lint moved from 15 to 11 warnings by simplifying the touched auth priority branches. Remaining warnings are the planning/health non-null assertions and ingredient-label nested ternary, not a new clean-lint claim.
+Source-hash and generated-output drift plants failed and were removed. Malformed successful account responses were rejected. Forty-eight mocked HTTP error cases exercised the actual client and matched the previous implementation; a deliberately wrong expected outcome was detected. Build, 32 tests and session isolation passed. Full lint moved from 15 to 11 warnings by simplifying the touched auth priority branches. Remaining warnings are the planning/health non-null assertions and ingredient-label nested ternary, not a new clean-lint claim.
+
+A later live check called the actual generated-validator client against cloud registration with a temporary synthetic account. The real response passed its token, date and user validators. The account was removed afterward; its credentials were not persisted. This proves that boundary against the deployed API, independently of Simulator UI acceptance.
 
 Hey API's packaged MIT license and Zod's MIT license were checked. The generator is a development dependency; Zod 4.6.7 is a runtime dependency. This is not a dependency vulnerability remediation or whole-API runtime-validation claim.
