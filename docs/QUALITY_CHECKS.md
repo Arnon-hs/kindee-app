@@ -108,3 +108,19 @@ Ten integration tests use disposable Git fixtures and the actual pinned Oxlint. 
 Local acceptance: PWA build, **29/29 tests** (the prior 19 plus these 10), session-state check, changed-file lint, Knip report and both zero-clone scans passed. Application/native source, dependencies and workflows remain unchanged. Previous native builds are still tied to identical native source; they were not rerun for this web-tooling step. No hook, new CI gate, deployment, server setting or replacement binary is added. The next plan step is the framework-aware TypeScript flags.
 
 References for the chosen native rules: [non-null assertions](https://oxc.rs/docs/guide/usage/linter/rules/typescript/no-non-null-assertion), [cyclomatic complexity](https://oxc.rs/docs/guide/usage/linter/rules/eslint/complexity). Existing compact-format, bounded-test-regex and SonarJS license exclusions remain documented above.
+
+
+## Step 3a: framework-aware indexed access
+
+`tsconfig.json` now enables `noUncheckedIndexedAccess`. The existing build runs `vue-tsc --noEmit`, so it checks both TypeScript modules and Vue templates. The **10 measured diagnostics are now 0**. The [TypeScript option](https://www.typescriptlang.org/tsconfig/noUncheckedIndexedAccess.html) makes uncertain indexed reads include undefined; ordinary strict mode alone did not check these sites.
+
+- App navigation and profile/macro/onboarding fields now keep each value with its label/icon/route in one record rather than parallel arrays. Order, text, routes, option values, defaults, classes and style source remain the same.
+- Demo recipe slug extraction guards absence before decoding. Missing recipes still use recipeNotFound; valid filter/detail/portion behavior was compared with the base revision.
+- Weight-change math and the latest-weight display only read observed endpoints after presence checks. A weight-change result stays unknown for fewer than two readings; the latest measurement is displayed when present. Existing valid-input rounding/sign is preserved.
+- Dashboard error text now uses equivalent early returns to satisfy the warning rule already active on changed files. Full warnings are now **15** (10 assertions, 4 nested ternaries, 1 auth complexity); changed files have none.
+
+One-off checks against the merged PR #2 source compared **30 exact SSR HTML outputs** across ru/en/th, **18 demo API outcomes**, and **57 weight-history cases**. A wrong-route plant was detected by the same comparison. SSR uses controlled synthetic state/onboarding stages, an inert PWA helper and no network; it does not certify browser interactivity, pixels, permission flows, actual menu data or a physical phone. The scoped design-system check reuses source-inspected existing controls and CSS; no component contract, visual world or shared token was added. No new screenshot/live-UI claim is made.
+
+Temporary .ts and .vue unsafe-index plants passed with the flag disabled and failed when enabled; both were removed, and the real project typecheck passed. Local PWA build, **29 tests**, session-state check, strict changed-file lint, Knip report and both clone scans passed. Application transport/cache/native code and dependency versions did not change; native builds were not repeated for identical inputs.
+
+The recipe requires **one flag per PR**, so original step 3 is now 3a and 3b. exactOptionalPropertyTypes remains off; its **3 known diagnostics** (request-body omission and Workbox callback types) are the next independent compiler change. No cast/ignore workaround or cache behavior change is introduced here. No Git/agent hook, new workflow or branch-protection setting is added.
