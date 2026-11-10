@@ -7,7 +7,6 @@ export function configureNativeApi(value:string){
  if(url.username||url.password||url.search||url.hash||url.pathname!=='/'||!(url.protocol==='https:'||(import.meta.env.VITE_LOCAL_API==='true'&&url.protocol==='http:'&&privateHost)))throw new Error('invalidApiUrl');
  endpoint=url.origin;
 }
-export function nativeApiConfigured(){return !isNative||endpoint!=='';}
 export async function apiResponse(path:string,init:RequestInit={}) {
  if(!isNative)return fetch(path,init);
  if(!endpoint)throw new Error('apiUrlRequired');
