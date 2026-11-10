@@ -32,3 +32,11 @@ test('existing account failure priority remains stable',async()=>{
   });
  }
 });
+
+test('null error envelopes preserve authentication and rate-limit guidance',async()=>{
+ for(const [status,expected] of [[401,'authInvalid'],[429,'authRateLimited'],[422,'authFailed']] as const) {
+  await response(null,status,async()=>{
+   await assert.rejects(authenticateAccount('login',input),new Error(expected));
+  });
+ }
+});

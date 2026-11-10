@@ -14,7 +14,7 @@ export async function authenticateAccount(mode:'login'|'register',input:Credenti
  const response=await apiResponse('/api/v1/auth/'+mode,{method:'POST',cache:'no-store',headers:{Accept:'application/json','Content-Type':'application/json'},body:JSON.stringify(input)});
  if(!response.ok){
   const value=await response.json().catch(()=>({})) as {errors?:Record<string,string[]>};
-  throw new Error(authProblem(response.status,value.errors,mode));
+  throw new Error(authProblem(response.status,value?.errors,mode));
  }
  const schema=mode==='login'?zPostAuthLoginResponse:zPostAuthRegisterResponse;
  const session=schema.safeParse(await response.json());
