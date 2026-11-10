@@ -124,3 +124,10 @@ One-off checks against the merged PR #2 source compared **30 exact SSR HTML outp
 Temporary .ts and .vue unsafe-index plants passed with the flag disabled and failed when enabled; both were removed, and the real project typecheck passed. Local PWA build, **29 tests**, session-state check, strict changed-file lint, Knip report and both clone scans passed. Application transport/cache/native code and dependency versions did not change; native builds were not repeated for identical inputs.
 
 The recipe requires **one flag per PR**, so original step 3 is now 3a and 3b. exactOptionalPropertyTypes remains off; its **3 known diagnostics** (request-body omission and Workbox callback types) are the next independent compiler change. No cast/ignore workaround or cache behavior change is introduced here. No Git/agent hook, new workflow or branch-protection setting is added.
+
+
+## Step 3b: exact optional properties
+
+Both strict compiler options are now enabled in tsconfig. The 3 exact-optional diagnostics are resolved without casts/ignores: absent request bodies are conditionally omitted; initialized Workbox callback functions are checked before passing them to the strategy. All three hooks retain their original arrow closures, so expiration's constructor/quota setup and internal state remain owned by the original instance. Cache name, 50-entry/one-day expiration, HTTP-200 cacheability, four-second NetworkFirst timeout and personal-route exclusion are preserved.
+
+The real Workbox hook references match, a 200 response is accepted, 404 rejected and absent cached response rejected. A temporary explicit undefined-body assignment passed with the flag off and failed with it on, then was removed. Actual Vue typecheck/build, 29 tests, session check and strict changed lint passed. Whole-project warning backlog remains 15. This is a bounded type-contract fix, not new cache coverage or a dependency upgrade.
