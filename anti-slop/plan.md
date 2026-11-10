@@ -142,3 +142,9 @@ A bad staged assertion was rejected despite an unstaged fix; original fix preser
 Four root config regression cases exposed the earlier combined-string Knip/OpenAPI omission; corrected through a shared path selector. Existing unusual-filename controls still pass. Web build, 36 tests, session isolation and all independent checks passed. Real PR gate plants/final CI verification follow in this PR.
 
 PR #8 CI run 42903373271 proved all three new gates independently: changed warnings, dead code and qualifying clones each failed for deliberate controls, while the normal web job passed. Quality took 13 seconds including setup. The controls were committed with the documented one-operation SKIP_SIMPLE_GIT_HOOKS=1 solely to test the remote gates, then removed in a new normally checked commit. No persistent bypass, force push or history rewrite. Deletion-only index check was also rejected with its original index tree and working bytes restored. Final green CI is required before merge.
+
+### 2026-11-11: step 8, focused mutation assessment
+
+Stryker core 10.1.1 Apache-2.0, Node 22.23.1, tsx 4.23.15 tested the actual public-recipe cache module/test in an isolated small scratch project. Built-in command runner, coverageAnalysis off, concurrency 1, no threshold: 20 mutants in ~2 seconds, 19 killed and one genuine missing-assertion survivor (leading regex anchor removed). Added /untrusted/api/v1/recipes to private-route rejection cases. Repeat: all20 killed, no timeouts/errors, same production source hash. This is node:test command-outcome evidence, not per-test/whole-app/native coverage.
+
+Decision: on-demand diagnostic; no permanent Stryker dependency, score gate or schedule from this one-module assessment. Reproducible configuration and exact source hash in docs/MUTATION_PROBE.md. Future month review remains due 2026-12-11 in issue #9, along with trusted automatic Codex activation/final plan cleanup. Neither is marked complete early.
