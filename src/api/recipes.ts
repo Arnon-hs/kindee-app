@@ -6,12 +6,13 @@ export interface Recipe { market?:string; slug: string; title: string; descripti
 export interface Filters { max_calories?: number; min_protein_g?: number; max_price_thb?: number; max_total_minutes?: number; max_cleanup_minutes?: number }
 async function json<T>(url: string, init?: RequestInit): Promise<T> {
   if(import.meta.env.VITE_PUBLIC_DEMO==='true') {
+    const encodedSlug=url.split('?')[0]?.split('/')[4];
     if(init?.method==='POST') {
-      const slug=decodeURIComponent(url.split('/')[4]);
+      if(!encodedSlug)throw new Error('recipeNotFound');
+      const slug=decodeURIComponent(encodedSlug);
       return {data:scalePublicRecipe(slug,JSON.parse(String(init.body)).servings)} as T;
     }
-    const slug=url.split('?')[0].split('/')[4];
-    if(slug){const recipe=publicCatalog.find(r=>r.slug===decodeURIComponent(slug));if(!recipe)throw new Error('recipeNotFound');return {data:recipe} as T;}
+    if(encodedSlug){const recipe=publicCatalog.find(r=>r.slug===decodeURIComponent(encodedSlug));if(!recipe)throw new Error('recipeNotFound');return {data:recipe} as T;}
     const market=new URL(url,'https://kindee.invalid').searchParams.get('market')??'TH';return {data:publicCatalog.filter(r=>(r as Recipe&{market?:string}).market===market)} as T;
   }
   const response = await apiResponse(url, init);

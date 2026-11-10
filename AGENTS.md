@@ -4,7 +4,7 @@ Read README.md, DESIGN.md and docs/IOS_CLOUD_TEST.md before changing the mobile 
 
 Use design-system for relevant UI composition, starting from current tokens and controls. Use good-readme for public onboarding docs, grounded in commands and measured outcomes. Use anti-slop-audit for the Vue/TypeScript surface and anti-slop-rollout only for an agreed step of anti-slop/todo.md; React tools do not apply to this Vue client, and TS rules do not certify Swift/Kotlin.
 
-Run public web checks in order: KINDEE_PUBLIC_DEMO=true npm run build, KINDEE_PUBLIC_DEMO=true npm test, npm run test:state. Native Android: cd native/android, then ./gradlew :app:testDebugUnitTest :app:assembleDebug. iOS: scripts/test-native-ios-contracts.sh, then scripts/build-native-ios-simulator.sh, followed by actual Simulator acceptance. Preserve simulator signing for Keychain. Serialize heavy local builds and leave other projects/services untouched.
+Vue typechecking includes noUncheckedIndexedAccess; preserve the explicit guards and value/label records. Run public web checks in order: KINDEE_PUBLIC_DEMO=true npm run build, KINDEE_PUBLIC_DEMO=true npm test, npm run test:state. Native Android: cd native/android, then ./gradlew :app:testDebugUnitTest :app:assembleDebug. iOS: scripts/test-native-ios-contracts.sh, then scripts/build-native-ios-simulator.sh, followed by actual Simulator acceptance. Preserve simulator signing for Keychain. Serialize heavy local builds and leave other projects/services untouched.
 
 Keep real menus/source times, AI estimates, recipe estimates, plans and consumed diary entries distinguishable. Use Gregorian wire dates with the user's local timezone, even when the device displays a Buddhist calendar. Do not claim hardware, Watch, HealthKit, delivery eligibility or production acceptance from source/unit/simulator results alone.
 
@@ -21,7 +21,7 @@ Roll out one agreed step from anti-slop/todo.md; anti-slop/plan.md records the r
 
 Commands, after npm ci (Node 22.12+):
 
-- npm run lint: full scoped Oxlint warning report, including the existing 17-warning backlog.
+- npm run lint: full scoped Oxlint warning report, including the existing 15-warning backlog.
 - npm run lint:changed: fail on warnings in committed/staged/dirty/untracked web files against the merge base with origin/master. Use -- --base HEAD for only local edits; fetch origin first for branch review. Checks working-tree content, not an isolated staged snapshot.
 - npm run deadcode: Knip report; review the remaining file/exports/types, do not treat exit 0 as an empty backlog.
 - npm run dup: zero qualifying text clones, including Vue scripts/templates/styles at the documented thresholds.

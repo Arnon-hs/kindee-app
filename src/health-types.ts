@@ -13,5 +13,7 @@ export interface OnboardingInput {
 }
 /** Weight change comes from measurements; wearable calories cannot measure lost kilograms. */
 export function measuredWeightChange(logs:{kg:string|number}[]):number|null {
- return logs.length<2?null:Math.round((Number(logs.at(-1)!.kg)-Number(logs[0].kg))*100)/100;
+ const first=logs[0],last=logs.at(-1);
+ if(logs.length<2||first===undefined||last===undefined)return null;
+ return Math.round((Number(last.kg)-Number(first.kg))*100)/100;
 }
