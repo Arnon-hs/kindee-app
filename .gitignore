@@ -26,3 +26,6 @@ native/**/*.jks
 native/**/*.keystore
 native/**/*.p12
 native/**/*.mobileprovision
+
+# Local detector output, never application source
+reports/

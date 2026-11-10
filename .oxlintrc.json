@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "import", "unicorn", "oxc"],
+  "categories": {"correctness": "warn"},
+  "rules": {
+    "typescript/no-explicit-any": "warn",
+    "no-useless-assignment": "warn",
+    "no-eval": "warn",
+    "no-unreachable": "warn",
+    "no-constant-condition": "warn"
+  },
+  // Scope is the maintained web client/config/scripts, not Swift/Kotlin or vendored JS.
+  "ignorePatterns": ["native/**", "android/**", "ios/**", "dist/**", "reports/**"],
+  // Step 2 owns non-null assertions, nested conditionals and complexity.
+  // The broad probe's SonarJS formatting and inferred-boundary-type noise is not adopted.
+  // SonarJS's template-only unused variables would be false positives in Vue; native
+  // no-unused-vars/no-useless-assignment see template references, so no Vue override is needed.
+  // SonarJS password/regex rules are not enabled: the probe matched a localization key
+  // and bounded repository-translation tests. Do not exempt application code from native rules.
+  // SonarJS 4.2.2 was not retained: its packaged LICENSE differs from npm's LGPL metadata.
+  "overrides": []
+}

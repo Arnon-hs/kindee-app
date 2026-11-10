@@ -1,0 +1,26 @@
+{
+  "path": [
+    "src"
+  ],
+  "format": [
+    "vue",
+    "markup",
+    "css",
+    "scss"
+  ],
+  "ignore": [
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/*.d.ts",
+    "**/fixtures/**",
+    "**/generated/**",
+    "**/__generated__/**"
+  ],
+  "minLines": 15,
+  "minTokens": 100,
+  "threshold": 0,
+  "failOnEmpty": true,
+  "reporters": [
+    "console"
+  ]
+}

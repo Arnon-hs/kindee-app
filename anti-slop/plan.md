@@ -9,7 +9,7 @@ Kindee is moving from a food-planning prototype to a product with real menus and
 ## Stack
 
 - npm, Vue 3, Vite, TypeScript ~5.7, strict already enabled.
-- No project linter, formatter, Git hooks or agent hooks before this release.
+- At audit: no project linter, formatter, Git hooks or agent hooks. Step 1 adds manual Oxlint/Knip/jscpd commands; hooks remain absent.
 - Unit runner is node:test through tsx, 19 tests in six files; the probe failed to recognize this runner.
 - No browser E2E suite and no React dependency. React-only rules and react-doctor do not apply.
 - Handwritten HTTP API clients, no public OpenAPI/GraphQL schema.
@@ -26,13 +26,13 @@ The generic probe reported three baseline tsc errors because tsc cannot resolve 
 | --- | --- | --- | --- |
 | 1 API contract | missing | Two shared fetch call sites; handwritten shape assertions, no available public spec | Adopt after backend schema is published; first document/check existing transport contracts |
 | 2 Strict TS | partial | strict is on; Vue checker: 10 indexed-access, 3 optional-property diagnostics | Adopt flags in a small focused PR after non-null shortcut protection |
-| 3 Behavior lint | missing | 73 raw diagnostics, not 73 bugs; see triage below | Add only useful warning rules, with changed-file enforcement after baseline review |
+| 3 Behavior lint | partial, step 1 | 73 raw diagnostics, not 73 bugs; see triage below | Add only useful warning rules, with changed-file enforcement after baseline review |
 | 4 Boundaries | missing | Existing UI -> stores/API separation; no measured import cycles | Defer gate until native/web ownership is documented; keep 3-5 rules at most |
 | 5 Scar rules | partial | Actual native calendar mismatch and swallowed Keychain result reproduced during this release | Keep regression tests; do not invent a TS lint scar from a Swift defect |
 | 6 Agent rules/hooks | partial | Release adds concise AGENTS.md and skill usage; no automatic hook | Add checks as commands first, then hook after clean baseline |
 | 7 Mutation | missing | node:test runner has no dedicated Stryker coverage runner | Defer until a focused pure-logic module/command-runner cost is measured |
-| 8 Dead code | missing | Knip: 3 raw files; 1 unused source skeleton candidate, 2 maintenance/dynamic entries | Configure entries first, then remove only verified dead code |
-| 9 Duplicates | missing | jscpd: 0 textual clones in logic, components and styles | Cheap zero-clone command is suitable; no semantic/model download |
+| 8 Dead code | configured, step 1 | Knip: 3 raw files; 1 unused source skeleton candidate, 2 maintenance/dynamic entries | Configure entries first, then remove only verified dead code |
+| 9 Duplicates | configured, step 1 | jscpd: 0 textual clones in logic, components and styles | Cheap zero-clone command is suitable; no semantic/model download |
 | 10 CI gate | partial | Existing build/tests/session checks run in CI; branch-protection state not verified | Preserve existing jobs, wire new checks after useful baselines |
 | React doctor | n/a | Vue, no React | Skip; revisit only if React is introduced |
 
@@ -82,3 +82,16 @@ No hooks, branch protection, scheduled jobs, mutation package, React tool or cod
 ## Log
 
 2026-11-10: baseline measured, framework false positives corrected, lint/dead-code samples inspected. Rollout implementation has not begun. See todo.md.
+
+
+2026-11-10, step 1, branch `chore/anti-slop-detectors`:
+
+- Refreshed read-only probe before changes: Oxlint 1.93.0 still 73 diagnostics; Knip 3 unused files, 4 exports, 5 types, 6 unlisted Workbox imports; generic jscpd 0 clones. No finding was called a defect without review.
+- Installed exact Knip 6.45.0, jscpd 5.4.3, Oxlint 1.93.0; Workbox's six directly imported modules are pinned to existing 7.4.1. Only dependencies/configuration/docs change. Native source hashes still match SOURCE.json.
+- Configured Knip: unused files 3 -> 1 via explicit maintenance/dynamic/test entries; exports 4 -> 4, types 5 -> 5; unlisted Workbox 6 -> 0. No live module was deleted or ignored. src/platform.ts, nativeApiConfigured, locale exports and five exported types remain for step 5 review.
+- Mechanical deviation from recipe JSONC: knip.config.ts conditionally allows its exact generated SSR import only while the cache is absent. Cold and warm runs both have 0 unresolved issues and 0 config hints. The Vite plugin already discovers src/sw.ts; no redundant entry or bespoke reachability script was added.
+- Native Oxlint baseline: 0 diagnostics, no JS plugins or changed-file enforcement. Broad-probe 73 remains a scope comparison, not 73 fixes. Non-null/complexity/nested-condition work is still step 2. SonarJS 4.2.2 was inspected then removed because npm LGPL metadata disagreed with its packaged Sonar Source-Available LICENSE. Step 2 must resolve provenance or use proven native equivalents before adding that dependency.
+- Corrected clone coverage: the audit's format list omitted Vue. Both installed configs now select Vue SFC blocks; 0 clones. Strict JSON jscpd rejects comments and unknown config fields, so per-pattern exclusion reasons live in docs/QUALITY_CHECKS.md; workers are a supported CLI flag. No semantic model download.
+- Plants: Knip reported an unused file and reachable unused export; native Oxlint reported unreachable Vue script code and did not misreport template-only use; jscpd exited 1 on a 17-line copied TS module and a 46-line copied Vue component in both configs. A three-line copy correctly remained below threshold. All temporary changes were removed and source restored exactly; final manual commands pass while Knip prints its backlog.
+- npm-startup-inclusive timings: lint 0.20 s, Knip 0.47 s, both clone scans 0.14 s. These are manual tools in step 1, within future hook budgets; no hook, CI gate, schedule or branch-protection mutation was made. No TS source lint warning remains under the selected baseline. Other broad-probe warnings are deferred, not suppressed with inline disables.
+- Local acceptance: clean npm ci, web build, 19/19 tests, session-store check and all three detector commands passed. Native Android built in 32 s from this repository, 1,000/1,000 tests passed; iPhone Simulator arm64 SDK 26.5 build and signature verification passed, plus pure Swift contracts. Native source did not change. No hardware/runtime scenario was rerun. Existing CI is verified on the PR; this step adds no workflow/filter/job and needs no branch-protection setting.
