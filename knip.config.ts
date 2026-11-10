@@ -14,6 +14,8 @@ export default {
     'tests/**/*.test.ts',
     // Explicit SSR entry used by scripts/check-session-stores.mjs.
     'tests/session-store-check.ts',
+    // Codex's git-root-based runtime command string is not a JS import.
+    'scripts/codex-stop.mjs',
   ],
   project: [
     '**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx,vue}',

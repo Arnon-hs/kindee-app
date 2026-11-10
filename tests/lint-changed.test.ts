@@ -14,6 +14,7 @@ function fixture(check: (root: string) => void) {
   try {
     mkdirSync(join(root, 'scripts'));
     copyFileSync(join(project, 'scripts/lint-changed.mjs'), join(root, 'scripts/lint-changed.mjs'));
+    copyFileSync(join(project, 'scripts/quality-scope.mjs'), join(root, 'scripts/quality-scope.mjs'));
     copyFileSync(join(project, '.oxlintrc.json'), join(root, '.oxlintrc.json'));
     // Reuse the locked checker; the disposable repo contains no copied dependencies.
     symlinkSync(join(project, 'node_modules'), join(root, 'node_modules'), 'dir');
@@ -63,6 +64,15 @@ for (const path of ['src/new file.ts', 'src/hash#percent%.ts', 'src/line\nbreak.
     const result = run(root);
     assert.equal(result.status, 1, result.output);
     assert.match(result.output, /no-non-null-assertion/);
+  }));
+}
+
+for (const path of ['vite.config.ts','capacitor.config.ts','knip.config.ts','openapi-ts.config.ts']) {
+  test(`changed lint checks the root configuration ${path}`,()=>fixture(root=>{
+    write(root,path,'export const unsafe = value => value ? value > 1 ? 1 : 2 : 3;\n');
+    const result=run(root);
+    assert.equal(result.status,1,result.output);
+    assert.match(result.output,/no-nested-ternary/);
   }));
 }
 

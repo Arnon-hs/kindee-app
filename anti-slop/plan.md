@@ -132,3 +132,11 @@ Real PR #6 plant: workflow run 42898028758 rejected the deliberately modified ge
 ### 2026-11-11: step 5, verified dead code
 
 Fresh Knip and rg confirmed the unused platform skeleton, nativeApiConfigured, ru/en/th exports and five exported types had no consumers. Removed one file/one function and de-exported three constants/five types: one file, four exports, five types -> zero. Dynamic recipe maintenance, state checks and tests retained. Touched ingredientLabel now uses equivalent if branches; 55 outcomes matched the base and a deliberately wrong Thai locale was caught. Build, 32 tests, session isolation, deterministic API output and zero clones passed. Lint 11 -> 10 warnings, all existing non-null assertions in the prior planning/health files. No native/runtime behavior claim from this cleanup.
+
+### 2026-11-11: step 6, quality gates and project hooks
+
+New CI quality job uses full Git history and actual base SHA, reports ten old lint warnings, rejects changed-file warnings/Knip findings/clones, and runs independent gates even after a failure. No branch-protection edit or schedule. Installed simple-git-hooks 2.14.0 MIT; preserve custom hooks/core.hooksPath and all other hooks. Plan exception: nano-staged 1.0.2 source filters ACMR and skips pure deletions, while whole-project checks must cover deletions. It was measured and removed; the direct staged-index snapshot checker is used instead. Local staged check ~2.1 seconds; full agent checker ~7 seconds.
+
+A bad staged assertion was rejected despite an unstaged fix; original fix preserved. Actual Codex 0.142.4 hooks feature is stable/enabled; project Stop protocol tested for JSON success, aggregated lint/dead-code failure, and stop_hook_active stand-down. Automatic execution is pending user trust review in /hooks and was not bypassed. Current desktop cwd is an orchestration folder outside the Git checkout. Concrete files and official source are in docs/QUALITY_HOOKS.md.
+
+Four root config regression cases exposed the earlier combined-string Knip/OpenAPI omission; corrected through a shared path selector. Existing unusual-filename controls still pass. Web build, 36 tests, session isolation and all independent checks passed. Real PR gate plants/final CI verification follow in this PR.
