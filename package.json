@@ -12,7 +12,8 @@
     "test:state": "node scripts/check-session-stores.mjs",
     "lint": "oxlint src tests scripts vite.config.ts capacitor.config.ts knip.config.ts",
     "deadcode": "knip --no-exit-code",
-    "dup": "jscpd --config .jscpd.json --workers 1 && jscpd --config .jscpd.markup.json --workers 1"
+    "dup": "jscpd --config .jscpd.json --workers 1 && jscpd --config .jscpd.markup.json --workers 1",
+    "lint:changed": "node scripts/lint-changed.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",

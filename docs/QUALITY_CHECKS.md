@@ -7,13 +7,14 @@ Requires Node.js 22.12+ and npm. Install the locked tools:
 ```sh
 npm ci
 npm run lint
+npm run lint:changed
 npm run deadcode
 npm run dup
 ```
 
 | Command | What it does | Exit behavior |
 | --- | --- | --- |
-| `npm run lint` | Oxlint 1.93.0 correctness rules, explicit-any, unused assignments, eval, unreachable code and constant conditions; includes Vue scripts with template-aware native variable checks | Existing warnings print; syntax/config failures fail. Warning enforcement on changed files is step 2 |
+| `npm run lint` | Oxlint 1.93.0 correctness rules, explicit-any, unused assignments, eval, unreachable code and constant conditions; includes Vue scripts with template-aware native variable checks | Existing warnings print; syntax/config failures fail. Step 2 adds manual changed-file enforcement |
 | `npm run deadcode` | Knip 6.45.0 finds unused files/exports/types and dependency-resolution issues | Intentionally report-only with `--no-exit-code`; inspect findings. Tool/config failures are not intended success |
 | `npm run dup` | jscpd 5.4.3 scans logic and larger component/style blocks, including Vue SFCs | Fails on any qualifying clone (`threshold: 0`) or an empty scan. This is a local command, not a new CI gate |
 
@@ -38,7 +39,7 @@ Logic uses 6 lines / 40 tokens; larger component/style blocks use 15 lines / 100
 
 The initial Oxlint baseline uses native rules only. No SonarJS formatting, inferred-boundary-type, password-dictionary, bounded-test-regex or template-unused-variable diagnostics were adopted from the broad probe. Non-null assertions, nested conditions and complexity are reserved for step 2. The temporarily inspected SonarJS 4.2.2 package declared LGPL in npm metadata but supplied a different Sonar Source-Available LICENSE; it was removed and is absent from the manifest/lockfile. Resolve that discrepancy or choose verified native equivalents before a later step adds those rules. Developer tools are not bundled into either mobile app.
 
-## Measured acceptance on 2026-11-10
+## Step 1 acceptance on 2026-11-10
 
 | Measure | Before configuration | After configuration |
 | --- | --- | --- |
@@ -71,3 +72,39 @@ This step changes tooling/configuration/docs and direct dependency declarations.
 Tool references: [Knip configuration](https://knip.dev/reference/configuration), [Oxlint configuration](https://oxc.rs/docs/guide/usage/linter/config), [jscpd engine documentation](https://github.com/kucherenko/jscpd/blob/master/docs/rust.md). Installed-tool help and local planted output were used to verify supported options; unsupported JSON fields were removed.
 
 Step 1 platform verification: fresh Android Debug build from this repository, **1,000 tests passed, 0 failed/errors/skips**. iPhone-only arm64 Simulator build passed on **SDK 26.5**, its ad-hoc signature verified, and Swift meal/date/AI-boundary contracts passed. A clean locked npm install, PWA build, **19 tests** and session-store integration check passed. Application source/native manifest hashes remained unchanged. Simulator runtime and real hardware scenarios were not repeated for this tooling change.
+
+
+## Step 2: reject warnings in changed web source
+
+PR #1 was squash-merged at `0857ddcc554d8dc3d3f32a82c22f543b36a66157`; its default-branch web/Capacitor CI passed. This next step uses the existing locked Oxlint 1.93.0 with no dependency change:
+
+- `typescript/no-non-null-assertion`: warnings for TypeScript's postfix `!` shortcut.
+- `no-nested-ternary`: warnings for nested conditional expressions, including Vue scripts.
+- `complexity`: an explicit cyclomatic-path budget of **8** for `src/api/auth.ts`. The existing authenticateAccount measures **9** and remains a reviewed warning. This is a different metric from Sonar cognitive complexity, not a claim of identical coverage. Authentication has a small, focused branch budget; the rule is not imposed on unrelated planning code in this step.
+
+Full `npm run lint` reports **17 warnings**: 11 non-null assertions, 5 nested ternaries and 1 auth-complexity warning. These are maintenance findings, not 17 established bugs. Their source was not rewritten or silently suppressed. Warning locations:
+
+| Rule | Files retained for later edits |
+| --- | --- |
+| Non-null assertions | src/components/HealthConnection.vue, src/components/MealPlanner.vue, src/health-types.ts, src/stores/planning.ts, tests/planning.test.ts |
+| Nested ternaries | src/api/auth.ts, src/recipe-labels.ts, src/views/DashboardView.vue |
+| Auth complexity | src/api/auth.ts |
+
+Use the changed-file command before submitting changed web source:
+
+```sh
+git fetch origin
+npm run lint:changed
+# For only local staged/dirty/untracked edits, excluding earlier branch commits:
+npm run lint:changed -- --base HEAD
+```
+
+The default compares with the merge base of HEAD and origin/master and also collects staged, unstaged and untracked files. Renames are checked at their new path; deleted paths are skipped. Git's NUL-delimited output and argument arrays preserve spaces, percent/hash characters and newlines. An absent/unrelated base fails instead of returning an empty success. Fetching the base remains the caller's responsibility; this command does not access the network.
+
+Warnings fail for each selected file with `--deny-warnings`. An unchanged legacy file does not block the command. A touched legacy file must clear its warnings. The command checks current **working-tree content**; it is not a pre-commit index snapshot verifier. Config-only changes still require the full `npm run lint` command. Its scope matches the web lint inputs: script extensions under src/tests/scripts plus Vite, Capacitor and Knip root configs. Native, docs, generated output and assets keep their existing independent checks.
+
+Ten integration tests use disposable Git fixtures and the actual pinned Oxlint. They demonstrate: untouched backlog excluded; untracked files with spaces/hash/percent/newline names rejected for assertions; staged and committed changes rejected; a dirty tracked file rejected and its narrowed replacement accepted; renamed files checked and deletions skipped; nested Vue ternaries rejected; auth complexity above the explicit budget rejected; missing base rejected and explicit HEAD accepted. Fixtures are removed after each test.
+
+Local acceptance: PWA build, **29/29 tests** (the prior 19 plus these 10), session-state check, changed-file lint, Knip report and both zero-clone scans passed. Application/native source, dependencies and workflows remain unchanged. Previous native builds are still tied to identical native source; they were not rerun for this web-tooling step. No hook, new CI gate, deployment, server setting or replacement binary is added. The next plan step is the framework-aware TypeScript flags.
+
+References for the chosen native rules: [non-null assertions](https://oxc.rs/docs/guide/usage/linter/rules/typescript/no-non-null-assertion), [cyclomatic complexity](https://oxc.rs/docs/guide/usage/linter/rules/eslint/complexity). Existing compact-format, bounded-test-regex and SonarJS license exclusions remain documented above.

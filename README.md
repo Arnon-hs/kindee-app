@@ -50,7 +50,7 @@ The public demo uses an illustrative recipe catalog and keeps personal entries o
 
 ## Design and agent checks
 
-Read [DESIGN.md](DESIGN.md), [AGENTS.md](AGENTS.md), [local quality checks](docs/QUALITY_CHECKS.md) and [skill usage](docs/SKILLS.md). The anti-slop audit was applied to Vue/TypeScript. It is not a Swift/Kotlin checker, and step 1 adds manual `npm run lint`, `npm run deadcode` and `npm run dup` commands; hooks/CI gates remain planned. No new design framework replaces the existing native controls.
+Read [DESIGN.md](DESIGN.md), [AGENTS.md](AGENTS.md), [local quality checks](docs/QUALITY_CHECKS.md) and [skill usage](docs/SKILLS.md). The anti-slop audit was applied to Vue/TypeScript. It is not a Swift/Kotlin checker, and steps 1-2 add manual `npm run lint`, strict `npm run lint:changed`, `npm run deadcode` and `npm run dup` commands; automatic hooks/CI gates remain planned. No new design framework replaces the existing native controls.
 
 ## License and support
 
