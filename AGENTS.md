@@ -9,3 +9,20 @@ Run public web checks in order: KINDEE_PUBLIC_DEMO=true npm run build, KINDEE_PU
 Keep real menus/source times, AI estimates, recipe estimates, plans and consumed diary entries distinguishable. Use Gregorian wire dates with the user's local timezone, even when the device displays a Buddhist calendar. Do not claim hardware, Watch, HealthKit, delivery eligibility or production acceptance from source/unit/simulator results alone.
 
 Never add provider keys, session tokens, signing keys or private local settings. Preserve dirty work and all upstream attribution. Build artifacts belong in versioned GitHub release assets rather than the source tree. Do not change repository visibility, license, branch protection or unrelated workflows as a side effect of this task.
+
+## Anti-slop checks
+
+Roll out one agreed step from anti-slop/todo.md; anti-slop/plan.md records the reasoning and measurements.
+
+- Fix or explain findings. Do not add non-null assertions, any casts, TypeScript ignores or disable comments to make a check pass.
+- Each exclusion needs its reason in the config, or in docs/QUALITY_CHECKS.md when the tool only accepts strict JSON. Review exceptions when they grow.
+- After a real bug fix, identify the regression check that would have caught it. Add a custom rule only for a demonstrated incident or measured recurring cost.
+- Warnings and Knip backlog remain manual reports in step 1. Hooks, changed-file enforcement, CI gates and mutation testing are deferred to their planned steps.
+
+Commands, after npm ci (Node 22.12+):
+
+- npm run lint: scoped native Oxlint warnings for web source, tests, scripts and root configs.
+- npm run deadcode: Knip report; review the remaining file/exports/types, do not treat exit 0 as an empty backlog.
+- npm run dup: zero qualifying text clones, including Vue scripts/templates/styles at the documented thresholds.
+
+Run these commands when changing their inputs and keep reports under gitignored reports/. See docs/QUALITY_CHECKS.md for scope, exclusion reasons and planted checks. Keep native builds separate and serialized.
