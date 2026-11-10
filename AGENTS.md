@@ -14,14 +14,15 @@ Never add provider keys, session tokens, signing keys or private local settings.
 
 Roll out one agreed step from anti-slop/todo.md; anti-slop/plan.md records the reasoning and measurements.
 
-- Fix or explain findings. Do not add non-null assertions, any casts, TypeScript ignores or disable comments to make a check pass.
+- Fix or explain findings. Do not add TypeScript ignores or disable comments to make a check pass.
 - Each exclusion needs its reason in the config, or in docs/QUALITY_CHECKS.md when the tool only accepts strict JSON. Review exceptions when they grow.
 - After a real bug fix, identify the regression check that would have caught it. Add a custom rule only for a demonstrated incident or measured recurring cost.
-- Warnings and Knip backlog remain manual reports in step 1. Hooks, changed-file enforcement, CI gates and mutation testing are deferred to their planned steps.
+- Full-project warnings and Knip backlog remain reports. Step 2 rejects warnings in changed web source through a manual command; automatic hooks, new CI gates and mutation testing remain planned.
 
 Commands, after npm ci (Node 22.12+):
 
-- npm run lint: scoped native Oxlint warnings for web source, tests, scripts and root configs.
+- npm run lint: full scoped Oxlint warning report, including the existing 17-warning backlog.
+- npm run lint:changed: fail on warnings in committed/staged/dirty/untracked web files against the merge base with origin/master. Use -- --base HEAD for only local edits; fetch origin first for branch review. Checks working-tree content, not an isolated staged snapshot.
 - npm run deadcode: Knip report; review the remaining file/exports/types, do not treat exit 0 as an empty backlog.
 - npm run dup: zero qualifying text clones, including Vue scripts/templates/styles at the documented thresholds.
 
