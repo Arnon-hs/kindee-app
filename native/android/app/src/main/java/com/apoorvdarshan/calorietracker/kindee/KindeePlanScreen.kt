@@ -341,6 +341,7 @@ private fun MealOffer(row: JSONObject, planned: Boolean, prominent: Boolean = fa
     val ai = nutrition?.optString("source") == "ai_menu_estimate"
     val calories = nutrition?.optJSONObject("total")?.optDouble("calories")?.takeIf(Double::isFinite)
     val restaurant = menu.optString("restaurant")
+    val restaurantLink = menu.optString("offer_status") == "restaurant_link"
     val price = menu.optJSONObject("price")
     val priceText = if(price!=null) (if(menu.optBoolean("price_is_base")) "From " else "")+"${java.text.DecimalFormat("0.##").format(price.optDouble("amount_minor")/100)} ${price.optString("currency")}" else ""
     val image = menu.optString("image_url").takeIf { value ->
@@ -362,7 +363,8 @@ private fun MealOffer(row: JSONObject, planned: Boolean, prominent: Boolean = fa
                 Text(row.optString("title"),style=MaterialTheme.typography.titleLarge)
                 if (restaurant.isNotEmpty()) Text(restaurant,style=MaterialTheme.typography.bodyMedium)
                 if(priceText.isNotEmpty()) Text(priceText,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(if(calories!=null) "≈ ${calories.roundToInt()} kcal · ${if(ai) "AI estimate" else "recipe estimate"}" else "Calories not estimated",style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                if(!restaurantLink) Text(if(calories!=null) "≈ ${calories.roundToInt()} kcal · ${if(ai) "AI estimate" else "recipe estimate"}" else "Calories not estimated",style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                if(restaurantLink) Text("Confirm your delivery address in Grab.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         if(row.optString("offer_status")=="search_needed") Text("Recipe idea · no matching menu yet",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -376,6 +378,9 @@ private fun MealOffer(row: JSONObject, planned: Boolean, prominent: Boolean = fa
             }
             if (details) {
                 Text("${providerLabel(menu.optString("provider"))} · checked ${menuCheckedTime(menu.optString("checked_at"))}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                if (menu.optString("provider") == "line_man") {
+                    TextButton(onClick={openKindeeOffer(context,menu,webOnly=true)}) { Text("Open web menu") }
+                }
                 if(ai) {
                     val range=nutrition?.optJSONObject("calorie_range")
                     val total=nutrition?.optJSONObject("total")
@@ -390,16 +395,26 @@ private fun MealOffer(row: JSONObject, planned: Boolean, prominent: Boolean = fa
     }
 }
 
-internal fun openKindeeOffer(context: Context, row: JSONObject) {
+internal fun openKindeeOffer(context: Context, row: JSONObject, webOnly: Boolean = false) {
     val raw= row.optString("order_url").takeIf{it.isNotBlank() && it!="null"} ?: row.optString("source_url")
-    val u=Uri.parse(raw)
-    val allowed=setOf("app.grab.com","food.grab.com","lin.ee","www.wongnai.com","vivarooftopandrestaurant.com")
-    if(u.scheme!="https" || u.host?.lowercase() !in allowed || u.userInfo!=null || u.port!=-1) return
-    val deep=u.getQueryParameter("af_dp")?.let(Uri::parse)
-    if(deep?.scheme=="com.linecorp.linemanth" && deep.host=="app" && deep.path?.matches(Regex("/service/food/r/[A-Za-z0-9]+"))==true) {
-        try {context.startActivity(Intent(Intent.ACTION_VIEW,deep).setPackage("com.linecorp.linemanth"));return} catch(_:android.content.ActivityNotFoundException){}
+    val link=kindeeOrderLink(row.optString("provider"),raw)
+    if(link==null) {
+        android.widget.Toast.makeText(context,"Menu link unavailable. Refresh nearby menus.",android.widget.Toast.LENGTH_LONG).show()
+        return
     }
-    try { context.startActivity(Intent(Intent.ACTION_VIEW,u)) } catch(_:android.content.ActivityNotFoundException){}
+    if(!webOnly && link.app!=null && link.packageName!=null) {
+        try { context.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(link.app)).setPackage(link.packageName));return }
+        catch(_:android.content.ActivityNotFoundException){} catch(_:SecurityException){}
+    }
+    val browser=Intent(Intent.ACTION_VIEW,Uri.parse(link.web))
+    if(webOnly) {
+        try { context.startActivity(Intent(browser).setPackage("com.android.chrome"));return }
+        catch(_:android.content.ActivityNotFoundException){} catch(_:SecurityException){}
+    }
+    try { context.startActivity(if(webOnly) Intent.createChooser(browser,"Open web menu") else browser) }
+    catch(_:android.content.ActivityNotFoundException) {
+        android.widget.Toast.makeText(context,"No app can open this menu link.",android.widget.Toast.LENGTH_LONG).show()
+    }
 }
 
 private fun menuCheckedTime(value: String): String = runCatching {
