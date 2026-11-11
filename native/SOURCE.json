@@ -3,7 +3,7 @@
   "upstream_commit": "01a2f05c56aa61d36345fc1ad41e05f6bc8da415",
   "modified_for": "Kindee",
   "snapshot_date": "2026-11-10",
-  "files": 2004,
+  "files": 2006,
   "workout_frames": "96 Debug sample frames; full corpus excluded; downloaded on demand",
   "omitted": [
     "build outputs",
@@ -113,7 +113,7 @@
     "android/app/src/main/java/com/apoorvdarshan/calorietracker/kindee/KindeeClient.kt": "50a3bd7710aa2635026d156fd81e5e68fc253a97f3e9240c81a90588fb083e97",
     "android/app/src/main/java/com/apoorvdarshan/calorietracker/kindee/KindeeDiarySharing.kt": "945529130f9b8830ec6a19ce496c49a26a294d4f6f7dbb16539d4133ed90fef1",
     "android/app/src/main/java/com/apoorvdarshan/calorietracker/kindee/KindeeFoodPreferences.kt": "0f138ff95a5ab117a7f3d53ea0c805933c29c1f00e155a85f7cf2e1a31b24b1b",
-    "android/app/src/main/java/com/apoorvdarshan/calorietracker/kindee/KindeePlanScreen.kt": "fcc5b49cbd4db9bcbb85890ebc1c49016755584c008d10de5bc12e12fea0c392",
+    "android/app/src/main/java/com/apoorvdarshan/calorietracker/kindee/KindeePlanScreen.kt": "5caf49d528eaea13687fc220680c435c23b60287fc6f489ee83b63b54581ca11",
     "android/app/src/main/java/com/apoorvdarshan/calorietracker/models/AIProvider.kt": "195ddca768c4e47408f3250f61e24512385df0a31b5fb1d6d9bb394f9719dc8f",
     "android/app/src/main/java/com/apoorvdarshan/calorietracker/models/ActivityLevel.kt": "21ed06ae8f4b5d80d131ab64aea29ea47288a3b5d8f7a0e562e24b71f4480871",
     "android/app/src/main/java/com/apoorvdarshan/calorietracker/models/AddMenuConfig.kt": "e76b3d845b6031bb019fa7e218ca4cb1cca088d5da0b817bebddd8d73907d6ad",
@@ -2017,7 +2017,9 @@
     "shared/workout-vectors/README.md": "b1f4d76ae1fefd094103a5edfd8f329b9b9215a7336a04e02347ebda42bed611",
     "shared/workout-vectors/exercise-visual-manifest.json": "ef02f140a8d53316947129dd226c4f0e381b48521e92e13f5993e574851e01ed",
     "shared/workout-vectors/sample-pack.txt": "b79cf35335cfe32c9e531efa65ca98974ecb49e39c1ddf8ace77e14e2c8a4b41",
-    "tests/KindeeContracts.swift": "4f122f10f219a9911e5a19d4256a83e57e93eed807f5139da67f8bd93752e24d"
+    "tests/KindeeContracts.swift": "4f122f10f219a9911e5a19d4256a83e57e93eed807f5139da67f8bd93752e24d",
+    "android/app/src/main/java/com/apoorvdarshan/calorietracker/kindee/KindeeOrderLink.kt": "ecc08edd84de1cbc322da6d4ca5d79e71c1dd15e002fe1e104285985c35ca09d",
+    "android/app/src/test/java/com/apoorvdarshan/calorietracker/kindee/KindeeOrderLinkTest.kt": "882d67320eff439c2d8d0f73e3316c2bec7789ad07418751be03482be8a06299"
   },
   "kindee_release_additions": [
     "README.md",
